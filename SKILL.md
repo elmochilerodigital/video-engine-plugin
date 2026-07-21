@@ -8,7 +8,7 @@ description: Produce videos verticales 9:16 de marca (anuncios, redes) con el mo
 Este skill es **delgado**: no contiene el motor ni la marca, los **jala frescos
 desde la nube** cada vez (así un arreglo del motor llega a todos con un push, y
 la marca se edita en un solo lugar). Sus scripts viven junto a este archivo, en
-`${CLAUDE_PLUGIN_ROOT}/skills/video-engine/scripts/`.
+`~/.claude/skills/video-engine/scripts/`.
 
 ## Requisitos (verificar al inicio)
 
@@ -34,7 +34,7 @@ chmod 600 ~/.ia-nomads/config
 
 1. **Jalar el motor fresco** (a `~/.ia-nomads/engine`):
    ```bash
-   bash "${CLAUDE_PLUGIN_ROOT}/skills/video-engine/scripts/pull-engine.sh" stable
+   bash ~/.claude/skills/video-engine/scripts/pull-engine.sh stable
    ```
 2. **Crear el proyecto** desde el motor (fuera de iCloud), en modo nube:
    ```bash
@@ -42,7 +42,7 @@ chmod 600 ~/.ia-nomads/config
    ```
 3. **Jalar la marca** del cliente (Supabase → el proyecto):
    ```bash
-   bash "${CLAUDE_PLUGIN_ROOT}/skills/video-engine/scripts/fetch-brand-pack.sh" ~/Videos/<nombre>
+   bash ~/.claude/skills/video-engine/scripts/fetch-brand-pack.sh ~/Videos/<nombre>
    ```
    Materializa `brand.json`, las product-scenes y los SFX en el proyecto.
 4. **Transcribir, storyboard, construir y renderizar** siguiendo el motor:
@@ -57,7 +57,7 @@ chmod 600 ~/.ia-nomads/config
 
 - **Un solo secreto por cliente** (`api_secret`): sirve para el motor y la marca.
   Revocarlo en Supabase corta al cliente de todo (kill switch).
-- `${CLAUDE_PLUGIN_ROOT}` lo expande bash al correr los comandos (no se
-  sustituye en este texto — se usa dentro de un comando Bash real).
+- Este skill se instala como **carpeta** en `~/.claude/skills/video-engine/`
+  (clonando este repo ahí). Sus scripts corren desde esa ruta.
 - El motor y la marca se jalan **frescos**: no editar copias locales; se edita
   la fuente (repo del motor / Supabase) y se vuelve a jalar.
