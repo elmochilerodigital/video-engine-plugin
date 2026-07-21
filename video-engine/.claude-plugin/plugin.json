@@ -1,0 +1,9 @@
+{
+  "name": "video-engine",
+  "description": "Produce videos verticales 9:16 de marca con el motor de video de IA Nomads.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Carlos Millan",
+    "email": "carlos@ianomads.com"
+  }
+}

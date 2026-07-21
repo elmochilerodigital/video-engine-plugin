@@ -1,0 +1,17 @@
+{
+  "name": "video-engine-plugin",
+  "owner": {
+    "name": "Carlos Millan",
+    "email": "carlos@ianomads.com"
+  },
+  "description": "Motor de producción de video vertical 9:16 de IA Nomads (Remotion + ffmpeg + whisper).",
+  "plugins": [
+    {
+      "name": "video-engine",
+      "source": "./video-engine",
+      "description": "Produce videos verticales 9:16 de marca — jala el motor y la marca frescos de la nube y compone el proyecto Remotion.",
+      "version": "1.0.0",
+      "author": { "name": "Carlos Millan" }
+    }
+  ]
+}
