@@ -1,7 +1,9 @@
 #!/bin/bash
 # Jala el BRAND PACK del cliente desde la app (api/brand-pack) y lo materializa
 # en un proyecto compuesto: brand.json → src/, product-scenes → src/scenes,
-# sfx → public/sfx, logo → public/brand. El cliente lleva SOLO su api_secret
+# catálogo de escenas de la marca → scenes-catalog/ (junto al proyecto, como
+# referencia à la carte), sfx → public/sfx, logo → public/brand. El cliente
+# lleva SOLO su api_secret
 # (~/.ia-nomads/config: ENGINE_SECRET=<api_secret>).
 # Uso: fetch-brand-pack.sh <carpeta-proyecto>
 set -e
@@ -34,6 +36,15 @@ const { ENGINE_SECRET, GATEWAY, PROJ } = process.env;
     fs.writeFileSync(dest, Buffer.from(await x.arrayBuffer()));
   };
   for (const s of (j.productScenes || [])) { await dl(s.url, PROJ + '/src/scenes/' + s.name); console.log('  ✓ src/scenes/' + s.name); }
+  // Catálogo de escenas de la marca (carpetas por escena + catalog.json/catalogo.md).
+  // Se materializa como referencia à la carte; cada video importa las que use.
+  const path = require('path');
+  for (const s of (j.scenesCatalog || [])) {
+    const dest = PROJ + '/scenes-catalog/' + s.path;
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    await dl(s.url, dest);
+  }
+  if ((j.scenesCatalog || []).length) console.log('  ✓ ' + j.scenesCatalog.length + ' archivos → scenes-catalog/ (catálogo de la marca)');
   for (const s of (j.sfx || [])) { await dl(s.url, PROJ + '/public/sfx/' + s.name); }
   console.log('  ✓ ' + (j.sfx || []).length + ' sfx → public/sfx');
   const lg = j.brand.logo;
