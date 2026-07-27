@@ -45,12 +45,28 @@ chmod 600 ~/.ia-nomads/config
    bash ~/.claude/skills/video-engine/scripts/fetch-brand-pack.sh ~/Videos/<nombre>
    ```
    Materializa `brand.json`, las product-scenes y los SFX en el proyecto.
-4. **Transcribir, storyboard, construir y renderizar** siguiendo el motor:
+4. **Preguntar el FORMATO del video (obligatorio, antes del storyboard).**
+   Los formatos habilitados de la marca están en `brand.json → formats`
+   (p. ej. `talking-head`, `testimonial`, `tutorial`); el registro completo
+   (gramática, reglas e inputs de cada uno) vive en la tabla `video_formats`
+   de la app y en `motor/formats/<slug>.md` cuando el motor lo sirva. Si el
+   usuario no lo dijo ya, hacer UNA pregunta con ese menú. El formato dicta
+   qué inputs pedir ANTES de montar una sola escena:
+   - `talking-head` / `testimonial` → solo el footage limpio.
+   - `tutorial` → footage **+ screen recording del proceso (Loom)**: pedirlo
+     de una con el checklist — ventana angosta de desktop (~3:4, sidebar
+     visible), pasada completa y LENTA con pausa ~1s tras cada click, No
+     Molestar, resolución nativa, cuenta demo sin datos de clientes. El
+     sistema pone el timing (corta, acelera, panea y sincroniza); el usuario
+     jamás debe calzar tiempos. *Por qué es obligatorio preguntar:* en un
+     tutorial real (jul 2026) no se preguntó, se montó como talking-head
+     con screenshots y se perdió una vuelta completa de construcción.
+5. **Transcribir, storyboard, construir y renderizar** siguiendo el motor:
    el criterio de edición, el flujo de 7 pasos, las reglas y los componentes
    viven en el motor recién jalado —
    **leer `~/.ia-nomads/engine/SKILL.md` y `~/.ia-nomads/engine/references/`**
    y seguir eso. Este skill solo trae las piezas frescas; el criterio es del motor.
-5. **Publicar en la app** (handoff a copys/pauta): ver
+6. **Publicar en la app** (handoff a copys/pauta): ver
    `~/.ia-nomads/engine/references/publicar-en-app.md`.
 
 ## Notas
@@ -61,3 +77,8 @@ chmod 600 ~/.ia-nomads/config
   (clonando este repo ahí). Sus scripts corren desde esa ruta.
 - El motor y la marca se jalan **frescos**: no editar copias locales; se edita
   la fuente (repo del motor / Supabase) y se vuelve a jalar.
+- **Regla de fuego (innegociable):** este plugin y el motor son conocimiento
+  100% GENÉRICO — nunca nombrar una marca, cliente o persona en su código,
+  docs ni mensajes de commit. Las lecciones se escriben como "un video
+  real". Lo que tenga nombre de marca vive en su brand pack. Antes de cada
+  commit: grep de marcas.
