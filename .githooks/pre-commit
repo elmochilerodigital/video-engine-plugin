@@ -1,0 +1,18 @@
+#!/bin/bash
+# Regla 0 de la doctrina, aplicada por máquina: el motor es 100% genérico.
+# Bloquea el commit si el contenido staged contiene un nombre de marca.
+# La lista vive FUERA del repo (~/.ia-nomads/brands.txt, un nombre por
+# línea) para poder versionar este hook incluso en repos públicos.
+# Activar en cada clon:  git config core.hooksPath .githooks
+LISTA="$HOME/.ia-nomads/brands.txt"
+[ -f "$LISTA" ] || exit 0
+PATRON=$(grep -v '^\s*$' "$LISTA" | paste -sd'|' -)
+[ -z "$PATRON" ] && exit 0
+MATCH=$(git diff --cached -U0 | grep -E '^\+' | grep -inE "$PATRON" | grep -v 'PRODUCT.md')
+if [ -n "$MATCH" ]; then
+  echo "✗ REGLA 0: nombre de marca detectado en el commit (el motor es genérico):"
+  echo "$MATCH" | head -10
+  echo "Reescribe como 'un video real' / 'el cliente'. (Excepción única: PRODUCT.md)"
+  exit 1
+fi
+exit 0
