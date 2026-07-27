@@ -1,0 +1,73 @@
+name: Sin marcas
+
+# Regla 0 del lado del servidor: este repo es conocimiento 100% GENÉRICO y no
+# puede contener el nombre de ninguna marca, cliente ni persona.
+#
+# El hook local (.githooks/pre-commit) revisa lo que cada quien commitea en SU
+# máquina, y solo las líneas nuevas. Esto revisa TODO lo que llega al repo —
+# contenido completo y mensajes de commit — venga de la máquina que venga.
+#
+# La lista de nombres NO vive en el repo: viaja como el secret MARCAS, un
+# nombre por línea. Por eso los logs solo muestran RUTAS y SHAs, nunca la
+# línea que coincidió — la cartera de clientes no se filtra ni por el log.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Buscar nombres de marca
+        env:
+          MARCAS: ${{ secrets.MARCAS }}
+          ANTES: ${{ github.event.before }}
+          AHORA: ${{ github.sha }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "${MARCAS//[[:space:]]/}" ]; then
+            echo "::error::Falta el secret MARCAS (un nombre por línea)."
+            echo "Falla a propósito: sin lista, este check no puede garantizar nada."
+            echo "Nota: los PR desde un fork no reciben secrets, así que no quedan cubiertos."
+            exit 1
+          fi
+          PATRON=$(printf '%s\n' "$MARCAS" | grep -v '^[[:space:]]*$' | paste -sd'|' -)
+
+          FALLA=0
+
+          # 1) Contenido de los archivos versionados. Excepción única: PRODUCT.md.
+          ARCHIVOS=$(git grep -IilE "$PATRON" -- . ':!PRODUCT.md' || true)
+          if [ -n "$ARCHIVOS" ]; then
+            FALLA=1
+            echo "::error::Nombre de marca en el contenido del repo:"
+            printf '  - %s\n' $ARCHIVOS
+          fi
+
+          # 2) Mensajes de los commits que llegan en este push.
+          if [ -n "${ANTES:-}" ] \
+             && [ "$ANTES" != "0000000000000000000000000000000000000000" ] \
+             && git cat-file -e "${ANTES}^{commit}" 2>/dev/null; then
+            for C in $(git rev-list "${ANTES}..${AHORA}"); do
+              if git log -1 --format='%B' "$C" | grep -qiE "$PATRON"; then
+                FALLA=1
+                echo "::error::Nombre de marca en el mensaje del commit $C"
+              fi
+            done
+          fi
+
+          if [ "$FALLA" -eq 1 ]; then
+            echo ""
+            echo "Reescribe como 'un video real' / 'el cliente' / 'el operador'."
+            echo "Lo que lleva nombre de marca pertenece a SU brand pack, nunca al motor."
+            echo "En local, para que te lo bloquee antes de commitear:"
+            echo "  git config core.hooksPath .githooks"
+            exit 1
+          fi
+
+          echo "✓ Sin nombres de marca."
