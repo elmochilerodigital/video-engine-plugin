@@ -62,7 +62,13 @@ const { ENGINE_SECRET, GATEWAY, PROJ } = process.env;
       fs.writeFileSync(PROJ + '/public/brand/logo.' + ext, buf);
       console.log('  ✓ public/brand/logo.' + ext);
     }
-  } else if (lg) { await dl(lg, PROJ + '/public/brand/logo'); console.log('  ✓ public/brand/logo'); }
+  } else if (lg) {
+    // El logo llega como URL: la extensión sale de la ruta (sin query), para
+    // que el proyecto lo referencie como public/brand/logo.<ext>.
+    const ext = (new URL(lg).pathname.match(/\.([a-z0-9]+)$/i) || [, 'png'])[1];
+    await dl(lg, PROJ + '/public/brand/logo.' + ext);
+    console.log('  ✓ public/brand/logo.' + ext);
+  }
 })().catch((e) => { console.error('✗ ' + e.message); process.exit(1); });
 NODE
 
