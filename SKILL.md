@@ -30,12 +30,26 @@ printf 'ENGINE_SECRET=%s\n' "<api_secret>" > ~/.ia-nomads/config
 chmod 600 ~/.ia-nomads/config
 ```
 
+**Varias marcas en una misma máquina.** Quien produce para más de una marca
+declara una llave por marca y elige con `--client <marca>`:
+
+```
+ENGINE_SECRET=<la marca por defecto>
+ENGINE_SECRET_<MARCA>=<su api_secret>
+```
+
+El nombre de la variable va en MAYÚSCULAS sin espacios (los guiones pasan a
+`_`). Sin `--client` se usa `ENGINE_SECRET`. **Antes de componer, confirmar
+con qué marca se está trabajando**: componer con la llave equivocada trae la
+identidad de otra marca al proyecto.
+
 ## Flujo para producir un video
 
 1. **Jalar el motor fresco** (a `~/.ia-nomads/engine`):
    ```bash
    bash ~/.claude/skills/video-engine/scripts/pull-engine.sh stable
    ```
+   Con varias marcas configuradas, añadir `--client <marca>`.
 2. **Crear el proyecto** desde el motor (fuera de iCloud), en modo nube:
    ```bash
    bash ~/.ia-nomads/engine/scripts/setup.sh ~/Videos/<nombre> --cloud [footage.mp4]
@@ -45,6 +59,7 @@ chmod 600 ~/.ia-nomads/config
    bash ~/.claude/skills/video-engine/scripts/fetch-brand-pack.sh ~/Videos/<nombre>
    ```
    Materializa `brand.json`, las product-scenes y los SFX en el proyecto.
+   Con varias marcas configuradas, añadir `--client <marca>`.
 4. **Preguntar el FORMATO del video (obligatorio, antes del storyboard).**
    Los formatos habilitados de la marca están en `brand.json → formats`
    (p. ej. `talking-head`, `testimonial`, `tutorial`); el registro completo

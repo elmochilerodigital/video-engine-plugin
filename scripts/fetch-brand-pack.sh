@@ -5,18 +5,24 @@
 # referencia à la carte), sfx → public/sfx, logo → public/brand. El cliente
 # lleva SOLO su api_secret
 # (~/.ia-nomads/config: ENGINE_SECRET=<api_secret>).
-# Uso: fetch-brand-pack.sh <carpeta-proyecto>
+# Uso: fetch-brand-pack.sh <carpeta-proyecto> [--client <marca>]
+#   --client elige la llave de esa marca en máquinas con varias configuradas.
 set -e
 
-PROJ="$1"
+PROJ=""
+CLIENT=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --client) CLIENT="$2"; shift 2 ;;
+    *) [ -z "$PROJ" ] && PROJ="$1"; shift ;;
+  esac
+done
 CONFIG="${ENGINE_CONFIG:-$HOME/.ia-nomads/config}"
-GATEWAY="${ENGINE_GATEWAY_URL:-https://ia-nomads-tools.vercel.app}"
-[ -z "$PROJ" ] && { echo "Uso: fetch-brand-pack.sh <carpeta-proyecto>"; exit 1; }
-if [ -z "$ENGINE_SECRET" ] && [ -f "$CONFIG" ]; then
-  # shellcheck disable=SC1090
-  source "$CONFIG"
-fi
-[ -z "$ENGINE_SECRET" ] && { echo "✗ Falta ENGINE_SECRET en $CONFIG"; exit 1; }
+GATEWAY="${ENGINE_GATEWAY_URL:-https://app.ianomads.com}"
+[ -z "$PROJ" ] && { echo "Uso: fetch-brand-pack.sh <carpeta-proyecto> [--client <marca>]"; exit 1; }
+
+# shellcheck disable=SC1091
+source "$(dirname "$0")/_secret.sh"
 
 echo "── Jalando brand pack desde el gateway ──"
 mkdir -p "$PROJ/src/scenes" "$PROJ/public/sfx" "$PROJ/public/brand"

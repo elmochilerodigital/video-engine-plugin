@@ -3,26 +3,28 @@
 # extrae a un caché local. El cliente lleva SOLO su llave (en ~/.ia-nomads/config);
 # el token de GitHub vive en el servidor, nunca en la máquina del cliente.
 #
-# Uso: pull-engine.sh [canal]        (canal por defecto: stable)
+# Uso: pull-engine.sh [canal] [--client <marca>]   (canal por defecto: stable)
 #   ENGINE_SECRET       (env) gana sobre el config
 #   ~/.ia-nomads/config       ENGINE_SECRET=... [ENGINE_GATEWAY_URL=...]
 #   ENGINE_HOME         (env) destino del motor  (default ~/.ia-nomads/engine)
+#   --client <marca>    elige la llave de esa marca en máquinas con varias
 set -e
 
-CHANNEL="${1:-stable}"
+CHANNEL=""
+CLIENT=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --client) CLIENT="$2"; shift 2 ;;
+    *) [ -z "$CHANNEL" ] && CHANNEL="$1"; shift ;;
+  esac
+done
+CHANNEL="${CHANNEL:-stable}"
 CONFIG="${ENGINE_CONFIG:-$HOME/.ia-nomads/config}"
 DEST="${ENGINE_HOME:-$HOME/.ia-nomads/engine}"
-GATEWAY="${ENGINE_GATEWAY_URL:-https://ia-nomads-tools.vercel.app}"
+GATEWAY="${ENGINE_GATEWAY_URL:-https://app.ianomads.com}"
 
-# Llave: env var ENGINE_SECRET gana; si no, se lee del config del home.
-if [ -z "$ENGINE_SECRET" ] && [ -f "$CONFIG" ]; then
-  # shellcheck disable=SC1090
-  source "$CONFIG"
-fi
-if [ -z "$ENGINE_SECRET" ]; then
-  echo "✗ Falta ENGINE_SECRET. Ponlo en $CONFIG:  ENGINE_SECRET=..."
-  exit 1
-fi
+# shellcheck disable=SC1091
+source "$(dirname "$0")/_secret.sh"
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
