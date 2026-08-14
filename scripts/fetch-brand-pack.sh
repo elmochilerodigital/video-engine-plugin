@@ -53,6 +53,13 @@ const { ENGINE_SECRET, GATEWAY, PROJ } = process.env;
   if ((j.scenesCatalog || []).length) console.log('  ✓ ' + j.scenesCatalog.length + ' archivos → scenes-catalog/ (catálogo de la marca)');
   for (const s of (j.sfx || [])) { await dl(s.url, PROJ + '/public/sfx/' + s.name); }
   console.log('  ✓ ' + (j.sfx || []).length + ' sfx → public/sfx');
+  const fonts = j.fonts || [];
+  if (fonts.length) {
+    fs.mkdirSync(PROJ + '/public/fonts', { recursive: true });
+    for (const f of fonts) { await dl(f.url, PROJ + '/public/fonts/' + f.name); }
+    if (j.fontsManifest) fs.writeFileSync(PROJ + '/public/fonts/manifest.json', JSON.stringify(j.fontsManifest, null, 2) + '\n');
+    console.log('  ✓ ' + fonts.length + ' fuentes → public/fonts (render offline y reproducible)');
+  }
   const lg = j.brand.logo;
   if (lg && lg.startsWith('data:')) {
     const m = lg.match(/^data:([^;,]+)(;base64)?,(.*)$/s);
