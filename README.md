@@ -25,7 +25,9 @@ Abre una sesión de Claude en la carpeta de tu video (con el footage crudo) y pi
 
 El skill te pedirá tu `api_secret` (te la da IA Nomads) la primera vez y la
 guarda en `~/.ia-nomads/config`. Sin una llave válida, el motor y la marca no se
-descargan (401). Requisitos: `node 18+`, `ffmpeg`, `whisper-cpp`.
+descargan (401). Los requisitos de la máquina los verifica el propio skill al
+arrancar (y te dice cómo instalar lo que falte); la guía de instalación
+completa te la comparte IA Nomads.
 
 ## Cómo funciona
 
