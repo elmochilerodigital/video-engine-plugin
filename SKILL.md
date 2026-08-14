@@ -31,17 +31,18 @@ printf 'ENGINE_SECRET=%s\n' "<api_secret>" > ~/.ia-nomads/config
 chmod 600 ~/.ia-nomads/config
 ```
 
-**Varias marcas en una máquina:** una llave por marca y se elige con
-`--client <marca>` en los scripts:
+**Varias marcas en una máquina:** SOLO llaves con nombre — sin
+`ENGINE_SECRET` default. Se elige con `--client <marca>` en los scripts:
 
 ```
-ENGINE_SECRET=<la marca por defecto>
-ENGINE_SECRET_<MARCA>=<su api_secret>
+ENGINE_SECRET_<MARCA>=<su llave>
+ENGINE_SECRET_<MARCA2>=<su llave>
 ```
 
-(MAYÚSCULAS sin espacios; guiones → `_`.) **Antes de componer, confirmar
-con qué marca se trabaja**: la llave equivocada trae la identidad de otra
-marca al proyecto.
+(MAYÚSCULAS sin espacios; guiones → `_`.) Sin default a propósito: si una
+operación no especifica marca, FALLA con mensaje claro y se pregunta —
+**el sistema nunca adivina la marca**. Antes de componer, confirmar
+siempre con cuál se trabaja.
 
 ## Paso 2 · Jalar el motor y seguir SUS instrucciones
 

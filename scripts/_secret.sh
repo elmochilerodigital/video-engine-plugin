@@ -34,6 +34,9 @@ if [ -n "$CLIENT" ]; then
 fi
 
 if [ -z "$ENGINE_SECRET" ]; then
-  echo "✗ Falta ENGINE_SECRET. Ponlo en $CONFIG:  ENGINE_SECRET=..."
+  echo "✗ No hay llave para esta operación. En máquinas de UNA marca:"
+  echo "  ENGINE_SECRET=<llave> en $CONFIG. Con varias marcas: pasa"
+  echo "  --client <marca> (las llaves van como ENGINE_SECRET_<MARCA>,"
+  echo "  sin default — el sistema nunca adivina la marca)."
   exit 1
 fi
