@@ -10,6 +10,23 @@
 #   --client <marca>    elige la llave de esa marca en máquinas con varias
 set -e
 
+# ── Auto-actualización del PLUGIN (best-effort, jamás bloquea) ──
+# El plugin es un clon de git congelado al día de la instalación; este pull
+# silencioso es la única vía por la que un fix del bootstrap llega solo a
+# las máquinas de los clientes. Si el pull trae cambios, el script se
+# re-ejecuta ya actualizado (guard contra loops por env).
+if [ -z "$ENGINE_PLUGIN_UPDATED" ]; then
+  export ENGINE_PLUGIN_UPDATED=1
+  PLUGDIR="$(cd "$(dirname "$0")/.." && pwd)"
+  BEFORE="$(git -C "$PLUGDIR" rev-parse HEAD 2>/dev/null || true)"
+  git -C "$PLUGDIR" pull -q --ff-only 2>/dev/null || true
+  AFTER="$(git -C "$PLUGDIR" rev-parse HEAD 2>/dev/null || true)"
+  if [ -n "$BEFORE" ] && [ "$BEFORE" != "$AFTER" ]; then
+    echo "── Plugin auto-actualizado ──"
+    exec bash "$0" "$@"
+  fi
+fi
+
 CHANNEL=""
 CLIENT=""
 while [ $# -gt 0 ]; do
