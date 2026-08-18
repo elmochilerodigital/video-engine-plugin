@@ -1,6 +1,6 @@
 ---
 name: video-engine
-description: Produce videos verticales 9:16 de marca (anuncios, redes) con el motor de video de IA Nomads — jala el motor y la marca frescos desde la nube y compone el proyecto Remotion. Úsalo SIEMPRE que se pida crear, editar o montar un video/anuncio/reel de una marca montada sobre este sistema, o agregar motion graphics, captions, zooms o SFX a un footage de esa marca.
+description: Produce videos verticales 9:16 de marca (anuncios, redes) con el motor de video de IA Nomads — jala el motor y la marca frescos desde la nube y compone el proyecto Remotion. El footage entra de dos formas: un archivo local, o un video ya aprobado en la app identificado por su ID (la tarjeta del Planner lo lleva). Úsalo SIEMPRE que se pida crear, editar, montar o producir un video/anuncio/reel de una marca montada sobre este sistema; cuando llegue un ID de video para editar o producir ("edita este video: <id>"); cuando se pregunte qué videos hay aprobados o pendientes por producir; o cuando se pida agregar motion graphics, captions, zooms o SFX a un footage de esa marca.
 ---
 
 # Video Engine — bootstrap del cliente
