@@ -22,12 +22,25 @@ Homebrew).
 bash ~/.claude/skills/video-engine/scripts/preparar.sh
 ```
 
-Instala con Homebrew lo que falte (node, ffmpeg, whisper-cpp, python3 con
-Pillow). Si termina con código 2 es que falta Homebrew: su instalador pide
-la contraseña del Mac, así que se le pasa a la persona el comando que el
-script imprime para que lo pegue en su Terminal, y se vuelve a correr
-`preparar.sh`. Las herramientas de render (Remotion) no van aquí: el motor
-las instala solo en el primer paso que corra en esta máquina.
+Instala lo que falte (node, ffmpeg, whisper-cpp, python3 con Pillow y
+numpy; en Linux además las librerías que Chrome headless necesita). Los
+códigos de salida:
+
+- **0**: la máquina está lista.
+- **2**: falta algo que pide contraseña (Homebrew, o en Linux las
+  librerías con `sudo apt-get`). Se le pasa a la persona el comando EXACTO
+  que el script imprime para que lo pegue en su terminal, y se vuelve a
+  correr `preparar.sh`, que sigue desde donde quedó.
+- **3**: es Windows sin WSL (PowerShell o Git Bash). El motor corre en
+  Linux, igual que en la nube: en Windows eso es WSL con Ubuntu, y Claude
+  Code se instala y se abre DENTRO de Ubuntu. Se le explican a la persona
+  los pasos que el script imprime y no se sigue hasta que la sesión corra
+  dentro de Ubuntu.
+
+En WSL el footage va dentro de Ubuntu (`~/…`), no en `/mnt/c/…`: funciona
+pero cada lectura cruza al disco de Windows y los renders van mucho más
+lentos. Las herramientas de render (Remotion) no van aquí: el motor las
+instala solo en el primer paso que corra en esta máquina.
 
 ## Paso 1 · Asegurar la llave (una vez por máquina)
 

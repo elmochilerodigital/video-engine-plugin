@@ -28,10 +28,16 @@ O, si vas a entrenar una marca nueva:
 > "iniciemos el entrenamiento de <marca>"
 
 La primera vez el skill prepara la máquina solo (instala node, ffmpeg y
-whisper con Homebrew; si falta Homebrew te pasa el único comando que tienes
-que pegar tú, porque pide la contraseña del Mac) y te pide la llave que te
-dio IA Nomads, que guarda en `~/.ia-nomads/config`. Sin una llave válida, el
-motor y la marca no se descargan (401).
+whisper con Homebrew; si falta algo que pide contraseña te pasa el comando
+exacto para que lo pegues tú) y te pide la llave que te dio IA Nomads, que
+guarda en `~/.ia-nomads/config`. Sin una llave válida, el motor y la marca
+no se descargan (401).
+
+**Windows:** el motor corre en Linux, igual que en la nube. Instala WSL con
+Ubuntu (`wsl --install -d Ubuntu` en PowerShell como administrador),
+reinicia, abre Ubuntu e instala Claude Code ahí dentro
+(`curl -fsSL https://claude.ai/install.sh | bash`). Todo se trabaja desde la
+ventana de Ubuntu, con el footage dentro de Ubuntu.
 
 ## Cómo funciona
 
