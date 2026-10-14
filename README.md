@@ -23,11 +23,15 @@ Abre una sesión de Claude en la carpeta de tu video (con el footage crudo) y pi
 
 > "hazme un video de marca con este footage"
 
-El skill te pedirá tu `api_secret` (te la da IA Nomads) la primera vez y la
-guarda en `~/.ia-nomads/config`. Sin una llave válida, el motor y la marca no se
-descargan (401). Los requisitos de la máquina los verifica el propio skill al
-arrancar (y te dice cómo instalar lo que falte); la guía de instalación
-completa te la comparte IA Nomads.
+O, si vas a entrenar una marca nueva:
+
+> "iniciemos el entrenamiento de <marca>"
+
+La primera vez el skill prepara la máquina solo (instala node, ffmpeg y
+whisper con Homebrew; si falta Homebrew te pasa el único comando que tienes
+que pegar tú, porque pide la contraseña del Mac) y te pide la llave que te
+dio IA Nomads, que guarda en `~/.ia-nomads/config`. Sin una llave válida, el
+motor y la marca no se descargan (401).
 
 ## Cómo funciona
 
