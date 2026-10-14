@@ -24,18 +24,19 @@ fc-cache -f >/dev/null 2>&1 || true
 # ffmpeg y ffprobe: la misma serie que el Mac y la nube (8.1), el mismo build
 # estático de BtbN que hornea la imagen de la nube, verificado por su sha256.
 # Solo existe para x86_64, que es lo que traen los PC con Windows; en un
-# equipo ARM se usa el ffmpeg de Ubuntu y se avisa.
-FFMPEG_TAG=autobuild-2026-09-26-13-03
-FFMPEG_PKG=ffmpeg-n8.1.3-linux64-gpl-8.1
-FFMPEG_SHA256=add729675e76163d04ba7e5b7e09c2439a20f66a4eaa23994b20d63f8ad75cb7
+# equipo ARM se usa el ffmpeg de Ubuntu y se avisa. El tag es el último
+# build de un mes, que BtbN guarda dos años (los diarios los borra a los 14
+# días); va igual al de nube/Dockerfile del motor.
+FFMPEG_TAG=autobuild-2026-09-30-13-08
+FFMPEG_PKG=ffmpeg-n8.1.3-9-g29e619e767-linux64-gpl-8.1
+FFMPEG_SHA256=97ce978979194b5cf7e06a5e68020dbdaa7a4f3294c5452b6a1bc347100dbb79
 if ! ffmpeg -version 2>/dev/null | head -1 | grep -q "ffmpeg version n8.1"; then
   if [ "$(uname -m)" = x86_64 ]; then
     paso "ffmpeg 8.1"
     T="$(mktemp -d)"
     base="https://github.com/BtbN/FFmpeg-Builds/releases/download"
-    # BtbN borra sus autobuilds viejos: si el fijo ya no está, se usa el
-    # último de la misma serie 8.1 (la serie es lo que importa para que el
-    # local y la nube corten igual).
+    # Si aun así el fijo ya no está, se usa el último de la misma serie 8.1
+    # (la serie es lo que importa para que el local y la nube corten igual).
     if curl -fsSL -o "$T/ff.tar.xz" "$base/${FFMPEG_TAG}/${FFMPEG_PKG}.tar.xz"; then
       echo "${FFMPEG_SHA256}  $T/ff.tar.xz" | sha256sum -c - >/dev/null
     else
