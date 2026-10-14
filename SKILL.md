@@ -16,6 +16,36 @@ de abajo los corre la sesión**, no ella. A ella solo se le pide lo que la
 sesión no puede resolver (su llave, y la contraseña del Mac si falta
 Homebrew).
 
+## Windows: preparar el computador (la sesión lo corre, no la persona)
+
+Si esta sesión corre en Windows (PowerShell o Git Bash, no dentro de WSL),
+el motor no puede correr aquí: corre en Linux, igual que en la nube. La
+sesión prepara el computador sola con el instalador de Windows:
+
+```powershell
+irm https://raw.githubusercontent.com/elmochilerodigital/video-engine-plugin/main/windows/instalar.ps1 -OutFile "$env:TEMP\instalar.ps1"
+powershell -ExecutionPolicy Bypass -File "$env:TEMP\instalar.ps1"
+```
+
+Se corre las veces que haga falta y su código de salida dice qué sigue. A
+la persona se le habla en palabras simples, nunca de comandos:
+
+- **10**: pedirle que reinicie el computador y, al volver, que abra Claude
+  y diga "sigamos preparando el computador". Antes de eso Windows le pidió
+  permiso de administrador: si no dijo Sí, el código es 1 y se repite.
+- **11**: se le abrió una ventana negra de Ubuntu. Explicarle que escriba su
+  nombre en minúscula, Enter, y una contraseña dos veces (no se ve al
+  escribir), que cierre la ventana y diga "sigamos". Luego se vuelve a correr.
+- **0**: listo. Explicarle cómo trabajar desde ahora: en la pestaña Code,
+  sesión nueva, en el selector de entorno elegir **WSL › Ubuntu**, y como
+  carpeta `videos` o la del video. El footage se deja en la carpeta "Videos
+  IA Nomads" del escritorio. Desde esa sesión dentro de Ubuntu se dice
+  "iniciemos el entrenamiento de <marca>" y sigue el flujo normal de abajo.
+
+Si la persona trae la frase de entrenamiento en una sesión de Windows,
+primero se prepara el computador y se le explica que el entrenamiento se
+abre en una sesión de Ubuntu.
+
 ## Paso 0 · Preparar la máquina (la sesión lo corre, una vez)
 
 ```bash

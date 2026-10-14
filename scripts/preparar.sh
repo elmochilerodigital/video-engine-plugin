@@ -36,10 +36,9 @@ esac
 
 if [ "$PLATAFORMA" = windows ] || [ "$PLATAFORMA" = desconocida ]; then
   echo "✗ El motor no corre directo en Windows: corre dentro de WSL, con Ubuntu."
-  echo "  1. En PowerShell como administrador:   wsl --install -d Ubuntu"
-  echo "  2. Reiniciar el computador, abrir Ubuntu desde el menú Inicio y crear su usuario."
-  echo "  3. Dentro de Ubuntu instalar Claude Code:   curl -fsSL https://claude.ai/install.sh | bash"
-  echo "  4. Abrir claude dentro de Ubuntu y pedir de nuevo que instale el skill."
+  echo "  Correr el instalador de Windows (PowerShell) y seguir su código de salida:"
+  echo '  irm https://raw.githubusercontent.com/elmochilerodigital/video-engine-plugin/main/windows/instalar.ps1 -OutFile "$env:TEMP\instalar.ps1"'
+  echo '  powershell -ExecutionPolicy Bypass -File "$env:TEMP\instalar.ps1"'
   exit 3
 fi
 
@@ -58,12 +57,10 @@ fontconfig fonts-noto-color-emoji fonts-dejavu-core fonts-liberation2"
 if [ "$PLATAFORMA" = wsl ] || [ "$PLATAFORMA" = linux ]; then
   faltan_apt=()
   for p in $APT_PAQUETES; do
-    # Ubuntu 24.04 renombró libasound2; cualquiera de los dos sirve.
-    if [ "$p" = libasound2t64 ]; then
-      dpkg -s libasound2t64 >/dev/null 2>&1 || dpkg -s libasound2 >/dev/null 2>&1 || faltan_apt+=("$p")
-      continue
-    fi
-    dpkg -s "$p" >/dev/null 2>&1 || faltan_apt+=("$p")
+    # Ubuntu 24.04 renombró varias librerías con el sufijo t64 (libasound2,
+    # libatk, libcups...): cualquiera de los dos nombres sirve.
+    base_p="${p%t64}"
+    dpkg -s "$base_p" >/dev/null 2>&1 || dpkg -s "${base_p}t64" >/dev/null 2>&1 || faltan_apt+=("$p")
   done
   if [ ${#faltan_apt[@]} -gt 0 ]; then
     echo "· Faltan librerías del sistema: ${faltan_apt[*]}"
