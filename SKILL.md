@@ -107,7 +107,19 @@ A partir de aquí, **el proceso completo lo dicta el motor**:
 **leer `~/.ia-nomads/engine/SKILL.md` y seguirlo** — el flujo, los scripts
 (`~/.ia-nomads/engine/scripts/`), la doctrina y los formatos viven allá y
 llegan frescos en cada descarga. Si la frase fue "iniciemos" o "sigamos el
-entrenamiento de <marca>", la puerta es `~/.ia-nomads/engine/ENTRENAMIENTO.md`.
+entrenamiento de <marca>", ANTES de abrir esa puerta y de ofrecer nada del
+entrenamiento se corre:
+
+```bash
+bash ~/.ia-nomads/engine/scripts/puede-entrenar.sh --client <marca>
+```
+
+Entrenar formatos es del equipo de IA Nomads, por persona con permiso; la
+llave de la cuenta de un cliente nunca pasa. Con **código 0** la puerta es
+`~/.ia-nomads/engine/ENTRENAMIENTO.md`. Con cualquier otro código no se
+ofrece ni se describe el entrenamiento: se le dice a la persona el mensaje
+que imprime el script, en palabras simples, y se le ofrece producir sus
+videos con el flujo normal.
 
 ## Notas
 
