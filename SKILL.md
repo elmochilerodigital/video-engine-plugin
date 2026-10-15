@@ -123,6 +123,12 @@ videos con el flujo normal.
 
 ## Notas
 
+- **Sesiones guardadas en el OS:** si una llave de la máquina es de una
+  persona del equipo que entrena formatos, `pull-engine.sh` deja puesto un
+  hook (`scripts/sesiones.py`) que guarda en el OS las sesiones del motor
+  de esta máquina para mejorar el sistema. La llave de la cuenta de un
+  cliente nunca lo activa. Cuando el script lo imprime, se le dice a la
+  persona con esas palabras, siempre, antes de seguir.
 - La llave de una PERSONA hereda sus permisos en la app y se revoca sola;
   la llave de la CUENTA (`api_secret`) puede todo lo que la cuenta
   contrata. Revocar cualquiera en la nube corta esa máquina de todo.

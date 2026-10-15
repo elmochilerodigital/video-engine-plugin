@@ -68,3 +68,8 @@ echo ""
 echo "✅ Motor actualizado en: $DEST"
 echo "   canal: $CHANNEL · versión: $VER"
 echo "   componer un video: $DEST/scripts/setup.sh <dest> <brand-pack> [footage]"
+
+# Sesiones del motor en el OS: en una máquina de entrenamiento con una llave
+# que entrena formatos, el hook queda puesto (y se quita si ya no). Lo que
+# imprime se le dice a la persona. Nunca frena la descarga.
+python3 "$(dirname "$0")/sesiones.py" instalar 2>/dev/null || true
