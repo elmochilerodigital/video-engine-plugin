@@ -73,3 +73,8 @@ echo "   componer un video: $DEST/scripts/setup.sh <dest> <brand-pack> [footage]
 # que entrena formatos, el hook queda puesto (y se quita si ya no). Lo que
 # imprime se le dice a la persona. Nunca frena la descarga.
 python3 "$(dirname "$0")/sesiones.py" instalar 2>/dev/null || true
+
+# Los ajustes que la persona le da al agente por el chat llegan a la tarjeta
+# como latido: el motor trae el hook (latido-chat.py) y aquí queda puesto en
+# toda máquina, de cliente o del equipo. Callado y sin frenar la descarga.
+[ -f "$DEST/scripts/latido-chat.py" ] && python3 "$DEST/scripts/latido-chat.py" instalar >/dev/null 2>&1 || true
