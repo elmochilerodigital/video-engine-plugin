@@ -1,8 +1,18 @@
 #!/bin/bash
 # preparar.sh — deja la máquina lista para el motor: revisa e instala lo que
-# falte (node, ffmpeg, whisper-cpp, python3 con Pillow y numpy, y en Linux
-# las librerías que Chrome headless necesita para renderizar). Lo corre la
-# sesión al arrancar el skill, sin que la persona pegue comandos.
+# falte según lo que la persona va a hacer en ella. Lo corre la sesión al
+# arrancar el skill, sin que la persona pegue comandos.
+#
+# Perfiles (--perfil, y queda guardado en ~/.ia-nomads/config como
+# PERFIL_MAQUINA para las siguientes veces):
+#   produccion     (por defecto) produce piezas: el render y la voz van en la
+#                  nube, así que basta node, ffmpeg y python3 con Pillow y
+#                  numpy. Nada de Chrome headless ni de whisper.
+#   entrenamiento  entrena formatos: itera hoja, verificar y pedacito en esta
+#                  máquina, así que en Linux suma las librerías que Chrome
+#                  headless necesita para renderizar.
+# La voz se transcribe en la nube en los dos perfiles. Whisper local solo se
+# instala si la casa lo pide con TRANSCRIPCION=whisper (entorno o config).
 #
 # Dónde corre:
 #   macOS            Homebrew.
@@ -19,11 +29,32 @@
 # persona lo pegue en su terminal, y termina con código 2. Se vuelve a correr
 # después y sigue desde donde quedó.
 #
-# Uso: preparar.sh            (instala lo que falte)
-#      preparar.sh --revisar  (solo dice qué falta, no instala)
+# Uso: preparar.sh [--perfil produccion|entrenamiento]  (instala lo que falte)
+#      preparar.sh --revisar [--perfil ...]               (solo dice qué falta)
 set -e
-REVISAR=""
-[ "${1:-}" = "--revisar" ] && REVISAR=1
+REVISAR=""; PERFIL=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --revisar) REVISAR=1; shift ;;
+    --perfil) PERFIL="${2:-}"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+CONFIG="${ENGINE_CONFIG:-$HOME/.ia-nomads/config}"
+leer_config() { grep -E "^$1=" "$CONFIG" 2>/dev/null | head -1 | cut -d= -f2- || true; }
+if [ -n "$PERFIL" ]; then
+  case "$PERFIL" in produccion|entrenamiento) ;; *) echo "✗ Perfil desconocido: $PERFIL (produccion o entrenamiento)"; exit 1 ;; esac
+  if [ -z "$REVISAR" ] && [ "$(leer_config PERFIL_MAQUINA)" != "$PERFIL" ]; then
+    mkdir -p "$(dirname "$CONFIG")"
+    { grep -vE '^PERFIL_MAQUINA=' "$CONFIG" 2>/dev/null || true; echo "PERFIL_MAQUINA=$PERFIL"; } > "$CONFIG.tmp" && mv "$CONFIG.tmp" "$CONFIG"
+    chmod 600 "$CONFIG" 2>/dev/null || true
+  fi
+else
+  PERFIL="$(leer_config PERFIL_MAQUINA)"
+  case "$PERFIL" in entrenamiento) ;; *) PERFIL=produccion ;; esac
+fi
+TRANSCRIPCION="${TRANSCRIPCION:-$(leer_config TRANSCRIPCION)}"
+echo "· Perfil de la máquina: $PERFIL"
 
 SISTEMA="$(uname -s 2>/dev/null || echo desconocido)"
 case "$SISTEMA" in
@@ -50,10 +81,21 @@ if ! command -v brew >/dev/null 2>&1; then
 fi
 
 # ── Linux / WSL: librerías del sistema (las del Dockerfile de la nube) ──
-APT_PAQUETES="build-essential curl git file procps python3 python3-pip bc xz-utils ca-certificates \
-libnss3 libdbus-1-3 libatk1.0-0 libgbm-dev libasound2t64 libxrandr2 libxkbcommon-dev libxfixes3 \
-libxcomposite1 libxdamage1 libatk-bridge2.0-0 libpango-1.0-0 libcairo2 libcups2 \
+# Las de Chrome headless solo hacen falta para renderizar en esta máquina,
+# es decir, en el perfil de entrenamiento.
+APT_PAQUETES="curl git file procps python3 python3-pip bc xz-utils ca-certificates \
 fontconfig fonts-noto-color-emoji fonts-dejavu-core fonts-liberation2"
+APT_CHROME="libnss3 libdbus-1-3 libatk1.0-0 libgbm-dev libasound2t64 libxrandr2 libxkbcommon-dev libxfixes3 \
+libxcomposite1 libxdamage1 libatk-bridge2.0-0 libpango-1.0-0 libcairo2 libcups2"
+[ "$PERFIL" = entrenamiento ] && APT_PAQUETES="$APT_PAQUETES $APT_CHROME"
+# build-essential solo si Homebrew va a instalar algo (lo exige en Linux); el
+# instalador de Windows deja node y ffmpeg sin Homebrew.
+herramientas_faltan() {
+  command -v node >/dev/null 2>&1 && command -v ffmpeg >/dev/null 2>&1 || return 0
+  [ "$TRANSCRIPCION" = whisper ] && ! command -v whisper-cli >/dev/null 2>&1 && ! command -v whisper-cpp >/dev/null 2>&1 && return 0
+  return 1
+}
+herramientas_faltan && APT_PAQUETES="build-essential $APT_PAQUETES"
 if [ "$PLATAFORMA" = wsl ] || [ "$PLATAFORMA" = linux ]; then
   faltan_apt=()
   for p in $APT_PAQUETES; do
@@ -80,18 +122,32 @@ if [ "$PLATAFORMA" = wsl ] || [ "$PLATAFORMA" = linux ]; then
   fi
 fi
 
+# ── Sesiones del motor guardadas en el OS (perfil entrenamiento) ──
+# Para mejorar el flujo, las sesiones de Claude del motor en esta máquina
+# suben al OS (scripts/sesiones.py, hook de Claude Code). La persona lo sabe:
+# el script imprime la frase que la sesión le dice, y cada sesión del motor
+# se lo recuerda en pantalla. Nunca hace fallar la preparación.
+guardar_sesiones() {
+  [ "$PERFIL" = entrenamiento ] && [ -z "$REVISAR" ] || return 0
+  command -v python3 >/dev/null 2>&1 || return 0
+  python3 "$(dirname "$0")/sesiones.py" instalar || true
+}
+
 # ── Herramientas (Homebrew en Mac y en Linux) ──
 faltan=()
 command -v node >/dev/null 2>&1 || faltan+=("node")
 command -v ffmpeg >/dev/null 2>&1 || faltan+=("ffmpeg")
-command -v whisper-cli >/dev/null 2>&1 || command -v whisper-cpp >/dev/null 2>&1 || faltan+=("whisper-cpp")
+if [ "$TRANSCRIPCION" = whisper ]; then
+  command -v whisper-cli >/dev/null 2>&1 || command -v whisper-cpp >/dev/null 2>&1 || faltan+=("whisper-cpp")
+fi
 command -v python3 >/dev/null 2>&1 || faltan+=("python3")
 command -v git >/dev/null 2>&1 || faltan+=("git")
 py=""
 python3 -c "import PIL, numpy" 2>/dev/null || py=1
 
 if [ ${#faltan[@]} -eq 0 ] && [ -z "$py" ]; then
-  echo "✓ La máquina tiene todo lo que el motor necesita ($PLATAFORMA)"
+  echo "✓ La máquina tiene todo lo que el motor necesita ($PLATAFORMA, $PERFIL)"
+  guardar_sesiones
   exit 0
 fi
 echo "· Falta: ${faltan[*]:-}${py:+ Pillow/numpy}"
@@ -115,4 +171,5 @@ if [ -n "$py" ]; then
   python3 -m pip install --quiet --user Pillow numpy 2>/dev/null \
     || python3 -m pip install --quiet --user --break-system-packages Pillow numpy
 fi
-echo "✓ La máquina quedó lista para el motor ($PLATAFORMA)"
+echo "✓ La máquina quedó lista para el motor ($PLATAFORMA, $PERFIL)"
+guardar_sesiones

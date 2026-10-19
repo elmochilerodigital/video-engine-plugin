@@ -20,11 +20,19 @@ Homebrew).
 
 Si esta sesión corre en Windows (PowerShell o Git Bash, no dentro de WSL),
 el motor no puede correr aquí: corre en Linux, igual que en la nube. La
-sesión prepara el computador sola con el instalador de Windows:
+sesión prepara el computador sola con el instalador de Windows, con el
+perfil de lo que la persona va a hacer en él:
+
+- **entrenamiento**: va a entrenar formatos (la editora, o trae la frase
+  "iniciemos el entrenamiento"). El entrenamiento renderiza en esta máquina,
+  así que suma las librerías de Chrome headless.
+- **produccion**: va a producir piezas. El render y la voz van en la nube:
+  instalación liviana. Es el perfil si no se sabe; ante la duda se le
+  pregunta en palabras simples si va a entrenar formatos o a producir videos.
 
 ```powershell
 irm https://raw.githubusercontent.com/elmochilerodigital/video-engine-plugin/main/windows/instalar.ps1 -OutFile "$env:TEMP\instalar.ps1"
-powershell -ExecutionPolicy Bypass -File "$env:TEMP\instalar.ps1"
+powershell -ExecutionPolicy Bypass -File "$env:TEMP\instalar.ps1" -Perfil produccion
 ```
 
 Se corre las veces que haga falta y su código de salida dice qué sigue. A
@@ -52,9 +60,13 @@ abre en una sesión de Ubuntu.
 bash ~/.claude/skills/video-engine/scripts/preparar.sh
 ```
 
-Instala lo que falte (node, ffmpeg, whisper-cpp, python3 con Pillow y
-numpy; en Linux además las librerías que Chrome headless necesita). Los
-códigos de salida:
+Instala lo que falte según el perfil de la máquina, que queda guardado
+(`PERFIL_MAQUINA` en `~/.ia-nomads/config`): **produccion** por defecto
+(node, ffmpeg, python3 con Pillow y numpy) y **entrenamiento**, que en Linux
+suma las librerías de Chrome headless para renderizar en local. Antes de
+entrenar en una máquina de producción se corre una vez con
+`--perfil entrenamiento`. La voz se transcribe en la nube en los dos
+perfiles: whisper no se instala. Los códigos de salida:
 
 - **0**: la máquina está lista.
 - **2**: falta algo que pide contraseña (Homebrew, o en Linux las

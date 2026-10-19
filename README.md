@@ -1,7 +1,7 @@
 # video-engine
 
 Skill de Claude Code para producir videos verticales 9:16 de marca con el motor
-de video de IA Nomads (Remotion + ffmpeg + whisper). Es un **cargador delgado**:
+de video de IA Nomads (Remotion + ffmpeg). Es un **cargador delgado**:
 jala el motor y la marca frescos de la nube; no contiene el motor ni secretos.
 
 ## Instalar
@@ -27,8 +27,9 @@ O, si vas a entrenar una marca nueva:
 
 > "iniciemos el entrenamiento de <marca>"
 
-La primera vez el skill prepara la máquina solo (instala node, ffmpeg y
-whisper con Homebrew; si falta algo que pide contraseña te pasa el comando
+La primera vez el skill prepara la máquina solo (instala node y ffmpeg con
+Homebrew, y para entrenar formatos lo que Chrome headless necesita; la voz se
+transcribe en la nube; si falta algo que pide contraseña te pasa el comando
 exacto para que lo pegues tú) y te pide la llave que te dio IA Nomads, que
 guarda en `~/.ia-nomads/config`. Sin una llave válida, el motor y la marca
 no se descargan (401).
@@ -43,8 +44,12 @@ el motor de video de IA Nomads" y la sesión corre el instalador:
 
 ```powershell
 irm https://raw.githubusercontent.com/elmochilerodigital/video-engine-plugin/main/windows/instalar.ps1 -OutFile "$env:TEMP\instalar.ps1"
-powershell -ExecutionPolicy Bypass -File "$env:TEMP\instalar.ps1"
+powershell -ExecutionPolicy Bypass -File "$env:TEMP\instalar.ps1" -Perfil produccion
 ```
+
+`-Perfil entrenamiento` para quien entrena formatos (itera el render en
+local); `-Perfil produccion` (el de por defecto) para quien produce piezas,
+con el render y la voz en la nube.
 
 Se corre las veces que haga falta; su código de salida dice qué sigue:
 

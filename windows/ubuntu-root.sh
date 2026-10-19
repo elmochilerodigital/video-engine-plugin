@@ -1,24 +1,38 @@
 #!/bin/bash
 # ubuntu-root.sh — deja el Ubuntu de WSL listo para el motor. Lo corre
 # windows/instalar.ps1 como root (wsl -u root), así que no pide contraseña.
-# Instala lo mismo que la imagen de la nube (nube/Dockerfile del motor):
-# librerías de Chrome headless, fuentes, python con Pillow y numpy, ffmpeg
-# FIJO en la serie 8.1 (build estático de BtbN), node 22 y whisper.cpp
-# compilado en la versión del Mac. Idempotente: lo que ya está se salta.
+# Instala lo mismo que la imagen de la nube (nube/Dockerfile del motor), según
+# el perfil de la máquina (primer argumento):
+#   produccion     (por defecto) fuentes, python con Pillow y numpy, ffmpeg
+#                  FIJO en la serie 8.1 (build estático de BtbN) y node 22.
+#                  El render y la voz van en la nube.
+#   entrenamiento  lo mismo más las librerías de Chrome headless, porque el
+#                  entrenamiento renderiza en esta máquina.
+# La voz se transcribe en la nube: whisper.cpp solo se compila si la casa lo
+# pide con TRANSCRIPCION=whisper (segundo argumento o entorno).
+# Idempotente: lo que ya está se salta.
 set -e
 export DEBIAN_FRONTEND=noninteractive
 paso() { echo "── $* ──"; }
+PERFIL="${1:-${PERFIL:-produccion}}"
+case "$PERFIL" in produccion|entrenamiento) ;; *) echo "✗ Perfil desconocido: $PERFIL (produccion o entrenamiento)"; exit 1 ;; esac
+TRANSCRIPCION="${2:-${TRANSCRIPCION:-}}"
+echo "· Perfil de la máquina: $PERFIL"
 
 paso "Librerías del sistema"
 apt-get update -qq
-LIBASOUND=libasound2t64
-apt-cache show libasound2t64 >/dev/null 2>&1 || LIBASOUND=libasound2
-apt-get install -y -qq --no-install-recommends \
-  build-essential cmake git curl ca-certificates xz-utils file procps bc \
+PAQUETES="git curl ca-certificates xz-utils file procps bc \
   python3 python3-pip python3-pil python3-numpy \
-  libnss3 libdbus-1-3 libatk1.0-0 libgbm-dev "$LIBASOUND" libxrandr2 libxkbcommon-dev \
-  libxfixes3 libxcomposite1 libxdamage1 libatk-bridge2.0-0 libpango-1.0-0 libcairo2 libcups2 libcurl4 \
-  fontconfig fonts-noto-color-emoji fonts-dejavu-core fonts-liberation2 >/dev/null
+  fontconfig fonts-noto-color-emoji fonts-dejavu-core fonts-liberation2"
+if [ "$PERFIL" = entrenamiento ]; then
+  LIBASOUND=libasound2t64
+  apt-cache show libasound2t64 >/dev/null 2>&1 || LIBASOUND=libasound2
+  PAQUETES="$PAQUETES libnss3 libdbus-1-3 libatk1.0-0 libgbm-dev $LIBASOUND libxrandr2 libxkbcommon-dev \
+  libxfixes3 libxcomposite1 libxdamage1 libatk-bridge2.0-0 libpango-1.0-0 libcairo2 libcups2"
+fi
+[ "$TRANSCRIPCION" = whisper ] && PAQUETES="$PAQUETES build-essential cmake libcurl4"
+# shellcheck disable=SC2086
+apt-get install -y -qq --no-install-recommends $PAQUETES >/dev/null
 fc-cache -f >/dev/null 2>&1 || true
 
 # ffmpeg y ffprobe: la misma serie que el Mac y la nube (8.1), el mismo build
@@ -61,8 +75,10 @@ if ! node --version 2>/dev/null | grep -q '^v2[2-9]\.'; then
 fi
 
 # whisper.cpp en la versión del Mac, compilado estático: un solo binario.
+# Solo con TRANSCRIPCION=whisper (opción de la casa): por defecto la voz se
+# escucha en la nube y no hace falta compilar nada.
 WHISPER_TAG=v1.9.1
-if ! command -v whisper-cli >/dev/null 2>&1; then
+if [ "$TRANSCRIPCION" = whisper ] && ! command -v whisper-cli >/dev/null 2>&1; then
   paso "whisper ${WHISPER_TAG} (compila unos minutos)"
   T="$(mktemp -d)"
   git -c advice.detachedHead=false clone -q --depth 1 --branch "$WHISPER_TAG" https://github.com/ggml-org/whisper.cpp "$T/w"
@@ -73,4 +89,4 @@ if ! command -v whisper-cli >/dev/null 2>&1; then
   rm -rf "$T"
 fi
 
-echo "✓ Ubuntu listo: $(ffmpeg -version | head -1 | cut -d' ' -f1-3) · node $(node --version) · whisper-cli $(command -v whisper-cli)"
+echo "✓ Ubuntu listo ($PERFIL): $(ffmpeg -version | head -1 | cut -d' ' -f1-3) · node $(node --version)${TRANSCRIPCION:+ · whisper-cli $(command -v whisper-cli)}"

@@ -13,10 +13,18 @@
 #       escribir un nombre y una contraseña, cerrar y volver a correr esto
 #   1   algo falló: el mensaje dice qué
 #
+# Perfil según lo que la persona va a hacer en este computador:
+#   produccion     (por defecto) produce piezas: el render y la voz van en la
+#                  nube. Instalación liviana, sin Chrome headless ni whisper.
+#   entrenamiento  entrena formatos (la editora): itera en local, así que
+#                  suma las librerías de Chrome headless para renderizar.
+#
 # Uso (PowerShell, lo corre la sesión):
 #   irm https://raw.githubusercontent.com/elmochilerodigital/video-engine-plugin/main/windows/instalar.ps1 -OutFile "$env:TEMP\instalar.ps1"
-#   powershell -ExecutionPolicy Bypass -File "$env:TEMP\instalar.ps1"
+#   powershell -ExecutionPolicy Bypass -File "$env:TEMP\instalar.ps1" -Perfil produccion
+#   powershell -ExecutionPolicy Bypass -File "$env:TEMP\instalar.ps1" -Perfil entrenamiento
 
+param([ValidateSet('produccion', 'entrenamiento')][string]$Perfil = 'produccion')
 $ErrorActionPreference = 'Stop'
 $Raw = 'https://raw.githubusercontent.com/elmochilerodigital/video-engine-plugin/main/windows'
 $Distro = 'Ubuntu'
@@ -58,13 +66,14 @@ if (-not $usuario) {
 Write-Host "· Usuario de Ubuntu: $usuario"
 
 # 3. Lo del sistema, como root: no pide contraseña.
-Paso 'Preparando Ubuntu para el motor (la primera vez tarda entre 5 y 10 minutos)'
-& wsl.exe -d $Distro -u root -- bash -c "curl -fsSL $Raw/ubuntu-root.sh | bash"
+if ($Perfil -eq 'entrenamiento') { $tarda = 'entre 3 y 6 minutos' } else { $tarda = 'un par de minutos' }
+Paso "Preparando Ubuntu para el motor, perfil $Perfil (la primera vez tarda $tarda)"
+& wsl.exe -d $Distro -u root -- bash -c "curl -fsSL $Raw/ubuntu-root.sh | bash -s -- $Perfil"
 if ($LASTEXITCODE -ne 0) { Fin 1 '✗ La preparación de Ubuntu falló. El mensaje de arriba dice en qué paso.' }
 
 # 4. Lo de la persona: el skill y la carpeta de videos.
 Paso 'Instalando el skill del motor'
-& wsl.exe -d $Distro -u $usuario -- bash -lc "curl -fsSL $Raw/ubuntu-usuario.sh | bash"
+& wsl.exe -d $Distro -u $usuario -- bash -lc "curl -fsSL $Raw/ubuntu-usuario.sh | bash -s -- $Perfil"
 if ($LASTEXITCODE -ne 0) { Fin 1 '✗ No se pudo instalar el skill. El mensaje de arriba dice por qué.' }
 
 # 5. Un acceso en el escritorio a la carpeta de videos de Ubuntu, para dejar
