@@ -6,6 +6,8 @@ que cada push a main es un release.
 
 - Dueño: Claude. Codex puede trabajar aqui, pero antes de tocar algo lo
   anota en `EN-CURSO.md` del repo de la web y le avisa a Carlos.
+- Al empezar cada tarea: `git pull` en tu carpeta; antes de cada push,
+  `git pull --rebase`.
 - Carpetas: Claude en `~/Development/video-engine-plugin`, Codex en
   `~/Development/video-engine-plugin-codex`. Nadie entra a la del otro.
 - Lee `SKILL.md` y `README.md` antes de tocar nada.
