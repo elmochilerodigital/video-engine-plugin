@@ -32,9 +32,19 @@ function Distros {
     return @($salida | ForEach-Object { ($_ -replace "`0", '').Trim() } | Where-Object { $_ })
   } catch { return @() }
 }
+# Si Ubuntu de verdad arranca. La lista de wsl a veces calla mientras Windows
+# termina de registrar una distribución recién instalada (justo después del
+# reinicio), y fiarse solo de ella hacía pedir un segundo reinicio de más.
+function Responde($d) {
+  try {
+    & wsl.exe -d $d -u root -- true 2>$null | Out-Null
+    return ($LASTEXITCODE -eq 0)
+  } catch { return $false }
+}
 
 # 1. WSL con Ubuntu.
 $hay = Distros | Where-Object { $_ -like "$Distro*" } | Select-Object -First 1
+if (-not $hay -and (Responde $Distro)) { $hay = $Distro }
 if (-not $hay) {
   Paso 'Instalando Linux (WSL con Ubuntu)'
   Write-Host 'Windows va a mostrar una ventana pidiendo permiso para hacer cambios: hay que decir Sí.'
@@ -43,7 +53,13 @@ if (-not $hay) {
   } catch {
     Fin 1 '✗ No se dio el permiso de administrador. Vuelve a correr el instalador y en la ventana de Windows di Sí.'
   }
-  Fin 10 'REINICIAR: Linux quedó instalado. Reinicia el computador. Al volver, si se abre una ventana negra de Ubuntu pidiendo un nombre, escribe tu nombre en minúscula y una contraseña que recuerdes. Luego abre Claude y di: sigamos preparando el computador.'
+  # Solo se pide reiniciar si Ubuntu todavía no arranca. Si ya responde (el
+  # reinicio ya se hizo y Windows acabó de registrarla), se sigue de largo.
+  if (-not (Responde $Distro)) {
+    Fin 10 'REINICIAR: Linux quedó instalado. Reinicia el computador. Al volver, si se abre una ventana negra de Ubuntu pidiendo un nombre, escribe tu nombre en minúscula y una contraseña que recuerdes. Luego abre Claude y di: sigamos preparando el computador.'
+  }
+  Write-Host '· Linux ya responde: no hace falta reiniciar.'
+  $hay = $Distro
 }
 $Distro = $hay
 
