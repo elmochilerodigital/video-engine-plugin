@@ -16,6 +16,65 @@ de abajo los corre la sesión**, no ella. A ella solo se le pide lo que la
 sesión no puede resolver (su llave, y la contraseña del Mac si falta
 Homebrew).
 
+## Sesión en la nube (sin nada instalado en el computador de la persona)
+
+La forma normal de producir desde 2026-10: una sesión de Claude Code en la
+nube de Anthropic (claude.ai/code, o la app de Claude con "Cloud"), abierta
+sobre este repositorio, en un entorno que la persona creó una vez siguiendo
+`docs/onboarding-nube.md`. **Cómo se reconoce** (cualquiera de las dos):
+
+```bash
+[ "$CLAUDE_CODE_REMOTE" = true ] || [ -f /etc/ia-nomads/nube ]
+```
+
+En esa sesión **cambian tres cosas y nada más**:
+
+- **No se prepara la máquina**: `preparar.sh` no se corre. El script de
+  preparación del entorno (`nube/setup.sh`) ya dejó ffmpeg, Pillow y
+  numpy; node y python3 vienen con la VM. No se instala whisper, ni
+  Remotion, ni Chrome: lo que pinta corre en la nube de IA Nomads.
+- **No se pide la llave ni se guarda**: vive como *secreto de red* del
+  entorno y el proxy de Anthropic la adjunta a cada petición al gateway.
+  No existe `~/.ia-nomads/config`, no se crea, y nunca se le pide a la
+  persona que pegue una llave en el chat. Los scripts lo saben solos.
+- **El footage entra solo por ID de tarjeta** ("edita este video: <id>",
+  o la bandeja con `produccion.sh`): no hay archivos en este computador.
+  El video se sube a la tarjeta desde la app o desde el conector. La
+  transcripción sale de las palabras con tiempos que la tarjeta ya tiene.
+
+Los pasos de la sesión en la nube, en este orden y sin preguntar nada:
+
+```bash
+PLUGIN="$(cd "$(dirname "$(find ~/.claude/skills/video-engine . -maxdepth 1 -name SKILL.md 2>/dev/null | head -1)")" && pwd)"
+bash "$PLUGIN/scripts/diagnostico.sh"            # una línea: ¿el gateway responde 200?
+bash "$PLUGIN/scripts/pull-engine.sh" stable     # el motor fresco en ~/.ia-nomads/engine
+```
+
+(`PLUGIN` es la carpeta de este SKILL.md: la del skill clonado por el
+script de preparación, o el repositorio de la sesión.) Si el diagnóstico
+no da 200, no se sigue: se le dice a la persona en palabras simples lo
+que la línea indica (dominio no permitido, secreto de red que no llegó o
+llave que no vale) y que lo revise en su entorno de claude.ai/code. Con
+200, el proceso completo lo dicta el motor: **leer
+`~/.ia-nomads/engine/SKILL.md` y seguirlo**, igual que en el Paso 2 de
+abajo. La carpeta de trabajo de cada pieza va en `~/videos/<pieza>`.
+
+**Si la carpeta de trabajo desapareció** (la conversación sigue pero
+`~/videos/<pieza>` ya no existe: la VM de la sesión se recicló por
+inactividad): primero `pull-engine.sh` de nuevo (el motor también se fue) y
+después el motor la rehace desde la nube de IA Nomads:
+
+```bash
+bash ~/.ia-nomads/engine/scripts/reanudar.sh <post_id> --proyecto ~/videos/<pieza>
+```
+
+Solo cuando la carpeta NO existe; si existe, se sigue donde iba. Lo que
+dice ese script al terminar indica si el diseño volvió entero o si hay que
+diseñar de nuevo.
+
+En la nube no aplica nada de lo que sigue sobre Windows, Homebrew o la
+llave en `~/.ia-nomads/config`: eso es para el computador de la persona.
+
 ## Windows: preparar el computador (la sesión lo corre, no la persona)
 
 Si esta sesión corre en Windows (PowerShell o Git Bash, no dentro de WSL),
@@ -47,6 +106,9 @@ primero se prepara el computador y se le explica que el entrenamiento se
 abre en una sesión de Ubuntu.
 
 ## Paso 0 · Preparar la máquina (la sesión lo corre, una vez)
+
+(Solo en el computador de la persona; en una sesión en la nube este paso y
+el siguiente no existen: ver arriba.)
 
 ```bash
 bash ~/.claude/skills/video-engine/scripts/preparar.sh
@@ -134,6 +196,9 @@ videos con el flujo normal.
   contrata. Revocar cualquiera en la nube corta esa máquina de todo.
 - Este plugin se instala como **carpeta** en `~/.claude/skills/video-engine/`
   (clonando este repo ahí) y se auto-actualiza en cada `pull-engine`.
+- **Diagnóstico en una línea** (en cualquier máquina):
+  `bash ~/.claude/skills/video-engine/scripts/diagnostico.sh` dice si el
+  gateway responde 200 desde esta sesión y por dónde llegó la llave.
 - **Regla de fuego (innegociable):** plugin y motor son conocimiento 100%
   GENÉRICO — nunca nombrar una marca, cliente o persona en su código, docs
   ni commits. Lo que tenga nombre de marca vive en su brand pack.

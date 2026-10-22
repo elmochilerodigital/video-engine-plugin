@@ -1,10 +1,27 @@
 # video-engine
 
 Skill de Claude Code para producir videos verticales 9:16 de marca con el motor
-de video de IA Nomads (Remotion + ffmpeg + whisper). Es un **cargador delgado**:
-jala el motor y la marca frescos de la nube; no contiene el motor ni secretos.
+de video de IA Nomads. Es un **cargador delgado**: jala el motor y la marca
+frescos de la nube; no contiene el motor ni secretos.
 
-## Instalar
+## En la nube (la forma normal)
+
+No se instala nada en el computador. La persona abre una sesión de Claude
+Code en la nube de Anthropic sobre este repositorio, en un entorno que creó
+una vez pegando tres bloques (dominios, script de preparación y su llave
+como secreto de red), y pide su video por el ID de la tarjeta. Los seis
+pasos, en palabras simples y con los bloques listos para copiar:
+
+→ **[docs/onboarding-nube.md](docs/onboarding-nube.md)**
+
+Lo que se pega en el entorno vive en [`nube/`](nube/): `setup.sh` (el
+script de preparación: ffmpeg, Pillow, numpy; sin whisper ni Remotion),
+`dominios.txt` y el detalle de cada bloque en `nube/README.md`. En esa
+sesión el skill no pide llave ni prepara la máquina: la rama "Sesión en la
+nube" de `SKILL.md` lo dice. `scripts/diagnostico.sh` responde en una línea
+si el gateway contesta 200 desde la sesión.
+
+## En el computador (Mac)
 
 Es un skill de carpeta. Se instala clonando este repo en la carpeta de skills:
 
@@ -16,8 +33,6 @@ O, en lenguaje natural, dile a tu Claude:
 
 > "Instala el skill de este repo: https://github.com/elmochilerodigital/video-engine-plugin
 > — clónalo en ~/.claude/skills/video-engine"
-
-## Primer uso
 
 Abre una sesión de Claude en la carpeta de tu video (con el footage crudo) y pide:
 
@@ -33,13 +48,13 @@ exacto para que lo pegues tú) y te pide la llave que te dio IA Nomads, que
 guarda en `~/.ia-nomads/config`. Sin una llave válida, el motor y la marca
 no se descargan (401).
 
-## Windows
+## Windows (equipo; ya no es el camino de los clientes)
 
-El motor corre en Linux, igual que en la nube: en Windows eso es WSL con
-Ubuntu, y las sesiones de video se abren dentro de Ubuntu desde la app de
-Claude (pestaña Code › entorno WSL › Ubuntu). La persona no instala nada a
-mano: en una sesión de Claude en Windows dice "prepara este computador para
-el motor de video de IA Nomads" y la sesión corre el instalador:
+Desde 2026-10 los clientes producen en la nube (arriba). El instalador de
+Windows sigue aquí para el equipo: el motor corre en Linux, igual que en la
+nube, y en Windows eso es WSL con Ubuntu. En una sesión de Claude en Windows
+se dice "prepara este computador para el motor de video de IA Nomads" y la
+sesión corre el instalador:
 
 ```powershell
 irm https://raw.githubusercontent.com/elmochilerodigital/video-engine-plugin/main/windows/instalar.ps1 -OutFile "$env:TEMP\instalar.ps1"
@@ -58,6 +73,9 @@ A la persona se le habla en palabras simples, nunca de comandos.
 ## Cómo funciona
 
 - El **motor** (privado) y la **marca** (Supabase) se jalan frescos con tu
-  `api_secret` — un arreglo del motor llega a todos con un push.
+  `api_secret` — un arreglo del motor llega a todos con un push. En la
+  nube la llave no está en la máquina: el proxy del entorno la adjunta a
+  cada petición (secreto de red) y los scripts mandan la petición sin la
+  cabecera de llave.
 - **Un solo secreto por cliente**: sirve para el motor y la marca. Revocarlo
   corta el acceso (kill switch).
