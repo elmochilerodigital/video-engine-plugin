@@ -1,0 +1,4 @@
+app.ianomads.com
+nryqfezguccbmvukqxel.supabase.co
+storage.googleapis.com
+raw.githubusercontent.com

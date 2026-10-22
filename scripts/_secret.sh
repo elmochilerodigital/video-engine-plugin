@@ -27,13 +27,29 @@ if [ -n "$CLIENT" ]; then
   _key="ENGINE_SECRET_$(printf '%s' "$CLIENT" | tr '[:lower:]-' '[:upper:]_')"
   eval "_sel=\${$_key:-}"
   if [ -z "$_sel" ]; then
-    echo "✗ No hay llave para \"$CLIENT\": falta $_key en $CONFIG"
-    exit 1
+    # shellcheck disable=SC1091
+    source "$(dirname "${BASH_SOURCE[0]}")/_nube_sesion.sh"
+    if ! nube_sesion; then
+      echo "✗ No hay llave para \"$CLIENT\": falta $_key en $CONFIG"
+      exit 1
+    fi
   fi
   ENGINE_SECRET="$_sel"
 fi
 
-if [ -z "$ENGINE_SECRET" ]; then
+# Sesión en la nube de Anthropic (_nube_sesion.sh): no hay llave en disco
+# y no hace falta. El proxy del entorno adjunta Authorization: Bearer a
+# toda petición hacia el gateway; curl omite la cabecera x-engine-secret
+# cuando va vacía, y ENGINE_AUTH_PROXY=1 se lo dice a quien lo necesite.
+# shellcheck disable=SC1091
+source "$(dirname "${BASH_SOURCE[0]}")/_nube_sesion.sh"
+if [ -z "$ENGINE_SECRET" ] && nube_sesion; then
+  ENGINE_SECRET=""
+  ENGINE_AUTH_PROXY=1
+  export ENGINE_AUTH_PROXY
+fi
+
+if [ -z "$ENGINE_SECRET" ] && [ -z "${ENGINE_AUTH_PROXY:-}" ]; then
   echo "✗ No hay llave para esta operación. En máquinas de UNA marca:"
   echo "  ENGINE_SECRET=<llave> en $CONFIG. Con varias marcas: pasa"
   echo "  --client <marca> (las llaves van como ENGINE_SECRET_<MARCA>,"
