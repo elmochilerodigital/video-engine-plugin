@@ -2,10 +2,12 @@
 # nube/setup.sh — script de preparación del ENTORNO EN LA NUBE de Anthropic.
 #
 # Se pega tal cual en el campo "Setup script" del entorno (claude.ai/code →
-# entorno → Setup script). Corre como root en Ubuntu 24.04, una sola vez:
+# entorno → Setup script). Corre como root en Ubuntu 24.04 la primera vez:
 # si termina en menos de cinco minutos, Anthropic guarda la imagen y las
-# sesiones siguientes arrancan con todo puesto. Medido en un Ubuntu 24.04
-# limpio: ver docs/onboarding-nube.md.
+# sesiones siguientes arrancan con todo puesto. Vuelve a correr al cambiar
+# el script o los dominios y cuando esa caché caduca (unos siete días); es
+# idempotente, así que verlo otra vez es normal. Medido en un Ubuntu 24.04
+# limpio: 25 a 50 s (docs/onboarding-nube.md).
 #
 # Instala SOLO lo que la sesión de diseño necesita y la VM no trae:
 #   ffmpeg            extraer la voz, medir cortes y silencios, mosaicos,

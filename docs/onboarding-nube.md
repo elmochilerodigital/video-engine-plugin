@@ -52,9 +52,12 @@ raw.githubusercontent.com
 
 **Bloque 2 · Script de preparación.** Pega en *Setup script* el contenido
 completo del archivo [`nube/setup.sh`](../nube/setup.sh) de este
-repositorio (ábrelo en GitHub, botón *Raw*, selecciona todo y copia). Corre
-una sola vez y en menos de cinco minutos: instala ffmpeg y dos librerías
-de Python, y deja la marca de que esto es la nube. No instala nada más.
+repositorio (ábrelo en GitHub, botón *Raw*, selecciona todo y copia). Tarda
+menos de un minuto: instala ffmpeg y dos librerías de Python, y deja la
+marca de que esto es la nube. No instala nada más. Corre la primera vez y
+se guarda; vuelve a correr solo cuando cambias el script o los dominios y
+cada siete días más o menos, cuando caduca lo guardado. Verlo correr de
+nuevo es normal.
 
 Guarda el entorno con **Add environment**.
 
@@ -68,6 +71,13 @@ secrets* y pulsa **Add secret**:
 | Secret type | `Bearer` (el que viene por defecto) |
 | Allowed websites | `app.ianomads.com` |
 | Custom headers | deja `Authorization` con prefijo `Bearer` y pega en *Value* la llave que te entregó IA Nomads |
+
+Si tu formulario es más corto y solo pide **Host** y **Value** (pasa en
+el plan Team cuando tu usuario no es administrador de la organización):
+Host `app.ianomads.com`, tipo **Token**, y en Value la llave. Funciona
+igual. En el plan Enterprise solo un administrador de la organización
+puede agregar el secreto: pídele que lo haga en el entorno, o que cree un
+entorno compartido con estos tres bloques.
 
 Pulsa **Add**. La llave queda guardada fuera de la sesión: Claude nunca la
 ve, no aparece en ningún archivo y no hay que pegarla en el chat. Si algún

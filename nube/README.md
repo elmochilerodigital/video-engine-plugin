@@ -22,7 +22,11 @@ vía se alcanza aunque no estuviera en la lista.
 
 ## 2 · Script de preparación (`setup.sh`)
 
-El contenido de `setup.sh`, entero. Corre como root una vez; instala
+El contenido de `setup.sh`, entero. Corre como root la primera vez y
+Anthropic guarda la imagen; vuelve a correr al cambiar el script o los
+dominios y cuando la caché caduca (unos siete días). Una sesión reabierta
+tras reciclarse la VM parte de esa imagen: ffmpeg y el skill siguen,
+`~/.ia-nomads/engine` no (pull-engine de nuevo). Instala
 ffmpeg, Pillow, numpy y bc, clona el plugin como skill y deja la marca de
 "esto es la nube". Sin whisper, sin Remotion, sin llaves.
 
@@ -34,6 +38,12 @@ ffmpeg, Pillow, numpy y bc, clona el plugin como skill y deja la marca de
 | Tipo | Bearer |
 | Allowed websites | `app.ianomads.com` |
 | Cabecera | `Authorization`, prefijo `Bearer`, valor: la llave que entregó IA Nomads |
+
+Formulario corto (plan Team sin rol de administrador de la organización):
+Host `app.ianomads.com`, tipo **Token**, Value la llave. El gateway acepta
+la cabecera `Authorization` con o sin la palabra `Bearer` (la recorta si
+viene). En Enterprise solo un administrador de la organización agrega
+secretos.
 
 El proxy de Anthropic adjunta `Authorization: Bearer <llave>` a toda
 petición de la sesión hacia ese host; la sesión nunca ve la llave y los
