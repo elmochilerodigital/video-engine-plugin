@@ -41,29 +41,35 @@ cuando se le pide.
 
 1. **Mira qué hay.** Si no encuentra nada del motor, termina con código 0
    y lo dice.
-2. **Copia lo de la persona ANTES de borrar.** De la casa de Ubuntu copia
-   la carpeta `videos`, la llave (`.ia-nomads/config`), las sesiones de
-   Claude (`.claude`) y cualquier otra carpeta o archivo visible, a
+2. **Copia lo de la persona ANTES de borrar.** Busca el usuario normal de
+   Ubuntu (si no hay ninguno o hay varios, para con código 1 sin tocar
+   nada). De su casa copia la carpeta `videos`, la llave
+   (`.ia-nomads/config`), las sesiones de Claude (`.claude`) y cualquier
+   otra carpeta o archivo visible, a
    `D:\IA NOMADS CLIENTES\Respaldo Ubuntu <fecha>` (o al disco con más
    espacio si no hay D). No copia lo que se vuelve a bajar: el motor
    descargado (`.ia-nomads/engine`), la copia del skill y las
-   `node_modules`. Comprueba que la copia tiene el mismo número de
+   `node_modules`, ni los demás archivos ocultos de la casa (`.ssh`,
+   `.gitconfig`, `.bashrc`). Comprueba que la copia tiene el mismo número de
    archivos y los mismos bytes que el origen; si no coincide, para con
    código 1 sin borrar nada. Deja un `LEEME.txt` en la copia.
-3. **Quita Ubuntu**: lo desregistra de WSL, borra la carpeta a donde se
-   movió (`D:\IA NOMADS CLIENTES\Ubuntu`, con su `ext4.vhdx`) solo si ya
-   no está registrada y solo tiene ese disco, quita la app de Ubuntu de
-   la tienda, los accesos directos "Videos IA Nomads" del escritorio y de
-   `D:\IA NOMADS CLIENTES`, la copia del skill del lado Windows y el
-   instalador descargado.
+3. **Quita Ubuntu**: la distribución del motor es exactamente la llamada
+   `Ubuntu` (si hay más de una Ubuntu, para con código 1 y pide revisión a
+   mano). La desregistra de WSL y, si la distribución se movió de disco,
+   quita su carpeta de donde WSL la tenía registrada (con su
+   `ext4.vhdx`), solo si ya no está registrada y solo tiene ese disco.
+   Quita la app de Ubuntu de la tienda, los accesos directos "Videos IA
+   Nomads" del escritorio y de `D:\IA NOMADS CLIENTES`, y el instalador
+   descargado. Una copia del skill en el `.claude` de Windows no la puso
+   el instalador: se avisa y se deja.
 4. **Quita WSL** (salvo `-ConservarWsl`): `wsl --uninstall` si es la
    versión de la tienda, y desactiva con DISM las características
    "Subsistema de Windows para Linux" y "Plataforma de máquina virtual".
    Windows pide permiso de administrador (una ventana: decir Sí) y
    normalmente un reinicio. No toca la virtualización del BIOS ni nada
    que no haya puesto el instalador.
-5. **Verifica y reporta**: que Ubuntu no esté en WSL, que no quede la
-   carpeta del disco ni los accesos, que WSL esté desactivado y que la
+5. **Verifica y reporta**: que Ubuntu no esté en WSL, que no quede su
+   carpeta de disco ni los accesos, que WSL esté desactivado y que la
    copia siga ahí. Imprime qué se quitó y dónde quedó la copia.
 
 La carpeta `D:\IA NOMADS CLIENTES` no se borra: ahí queda la copia. La

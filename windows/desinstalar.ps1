@@ -69,11 +69,12 @@ function Responde($d) {
     return ($LASTEXITCODE -eq 0)
   } catch { return $false }
 }
-# El nombre con el que Ubuntu está registrado, o nada si no está.
+# La distribución del motor es exactamente "Ubuntu" (lo que instala
+# instalar.ps1 con -d Ubuntu). Devuelve su nombre si está, o nada.
 function Ubuntu {
-  $hay = Distros | Where-Object { $_ -like "$Distro*" } | Select-Object -First 1
-  if (-not $hay -and (Responde $Distro)) { $hay = $Distro }
-  return $hay
+  if ((Distros) -contains $Distro) { return $Distro }
+  if (Responde $Distro) { return $Distro }
+  return $null
 }
 # Corre un programa dentro de Ubuntu sin pasar por el shell de Linux (así los
 # argumentos llegan tal cual) y devuelve sus líneas.
@@ -127,8 +128,16 @@ function Atajos {
   foreach ($d in DiscosFijos) { $sitios += (Join-Path ($d.DeviceID + '\') $Carpeta) }
   return @($sitios | Sort-Object -Unique | ForEach-Object { Join-Path $_ $Atajo } | Where-Object { Test-Path -LiteralPath $_ })
 }
-function CarpetasDistro {
-  return @(DiscosFijos | ForEach-Object { Join-Path (Join-Path ($_.DeviceID + '\') $Carpeta) $Distro } | Where-Object { Test-Path -LiteralPath $_ })
+# La carpeta de disco de una distribución, leída de donde WSL la registra
+# (si se movió de disco, es la carpeta nueva). Nada si no está registrada.
+function CarpetaDeDistro($nombre) {
+  try {
+    foreach ($k in Get-ChildItem 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss' -ErrorAction Stop) {
+      $v = Get-ItemProperty $k.PSPath -ErrorAction SilentlyContinue
+      if ($v.DistributionName -eq $nombre -and $v.BasePath) { return (($v.BasePath -replace '^\\\\\?\\', '').TrimEnd('\')) }
+    }
+  } catch { }
+  return $null
 }
 function RespaldosHechos {
   $r = @()
@@ -149,20 +158,27 @@ $InstaladorTemp = Join-Path $Temp 'instalar.ps1'
 
 Paso 'Mirando qué hay del motor en este computador'
 $hayUbuntu = Ubuntu
-$otras = @(Distros | Where-Object { $_ -notlike "$Distro*" })
+$ubuntus = @(Distros | Where-Object { $_ -like "$Distro*" })
+if ($ubuntus.Count -gt 1) {
+  Fin 1 "✗ Hay más de un Ubuntu en WSL ($($ubuntus -join ', ')) y no puedo saber cuál es del motor y cuál de la persona. No toqué nada: hay que revisarlo a mano."
+}
+$otras = @(Distros | Where-Object { $_ -ne $Distro })
+$carpetaDistro = $null
+if ($hayUbuntu) { $carpetaDistro = CarpetaDeDistro $hayUbuntu }
 $wslTienda = Paquete 'MicrosoftCorporationII.WindowsSubsystemForLinux'
 $wslFeature = Caracteristica 'Microsoft-Windows-Subsystem-Linux'
 $vmFeature = Caracteristica 'VirtualMachinePlatform'
 $wslPuesto = (-not $ConservarWsl) -and ($otras.Count -eq 0) -and ($wslTienda -or $wslFeature -eq 1 -or $vmFeature -eq 1)
 $restos = @()
 $restos += Atajos
-$restos += CarpetasDistro
-if (Test-Path -LiteralPath $SkillWindows) { $restos += $SkillWindows }
 if (Test-Path -LiteralPath $InstaladorTemp) { $restos += $InstaladorTemp }
 
 if ($hayUbuntu) { Write-Host "· Ubuntu está en WSL como '$hayUbuntu'" } else { Write-Host '· Ubuntu no está en WSL' }
 if ($otras.Count -gt 0) { Write-Host "· Hay otros Linux en WSL que no son del motor y no se tocan: $($otras -join ', ')" }
+if ($carpetaDistro) { Write-Host "· El disco de Ubuntu está en: $carpetaDistro" }
 foreach ($r in $restos) { Write-Host "· Quedó del motor: $r" }
+# La copia del skill del lado Windows no la puso el instalador: se avisa y se deja.
+if (Test-Path -LiteralPath $SkillWindows) { Write-Host "· Hay una copia del skill en $SkillWindows; no es del instalador y se deja como está." }
 
 if (-not $hayUbuntu -and $restos.Count -eq 0 -and -not $wslPuesto) {
   $previos = @(RespaldosHechos)
@@ -176,16 +192,24 @@ if (-not $hayUbuntu -and $restos.Count -eq 0 -and -not $wslPuesto) {
 if ($hayUbuntu) {
   Paso 'Copiando lo de la persona fuera de Ubuntu'
   if (-not (Responde $hayUbuntu)) {
-    Fin 1 "✗ Ubuntu está registrado pero no arranca, así que no puedo copiar lo que hay adentro. No borré nada. El disco de Ubuntu sigue en su carpeta ($((CarpetasDistro) -join ', ')); hay que revisarlo a mano antes de quitarlo."
+    Fin 1 "✗ Ubuntu está registrado pero no arranca, así que no puedo copiar lo que hay adentro. No borré nada. El disco de Ubuntu sigue en su carpeta ($carpetaDistro); hay que revisarlo a mano antes de quitarlo."
   }
   try {
-  $usuario = (& wsl.exe -d $hayUbuntu -u root -- bash -c "getent passwd 1000 | cut -d: -f1" 2>$null | Out-String).Trim()
-  $usuario = $usuario -replace "`0", ''
-  if (-not $usuario) {
-    Write-Host '· Ubuntu no tiene usuario creado: no hay nada de la persona que copiar.'
-  } else {
-    $home_ = "/home/$usuario"
-    Write-Host "· Usuario de Ubuntu: $usuario"
+  # La persona es el usuario normal de Ubuntu: uid de 1000 en adelante (65534
+  # es "nobody"). Si no hay ninguno o hay varios, no se adivina: se para.
+  $personas = @()
+  foreach ($linea in (Linux $hayUbuntu root @('getent', 'passwd'))) {
+    $campos = $linea -split ':'
+    if ($campos.Count -lt 6) { continue }
+    $uid = 0; if (-not [int]::TryParse($campos[2], [ref]$uid)) { continue }
+    if ($uid -ge 1000 -and $uid -lt 65534) { $personas += [pscustomobject]@{ nombre = $campos[0]; casa = $campos[5] } }
+  }
+  if ($personas.Count -eq 0) { Fin 1 '✗ No encontré el usuario de la persona en Ubuntu. No borro nada: hay que revisarlo a mano.' }
+  if ($personas.Count -gt 1) { Fin 1 "✗ Ubuntu tiene varios usuarios ($(($personas | ForEach-Object { $_.nombre }) -join ', ')) y no sé cuál es la persona. No borro nada: hay que revisarlo a mano." }
+  $usuario = $personas[0].nombre
+  $home_ = $personas[0].casa
+  if (-not $home_ -or -not $home_.StartsWith('/')) { $home_ = "/home/$usuario" }
+    Write-Host "· Usuario de Ubuntu: $usuario (su casa es $home_)"
 
     # Qué se copia: la carpeta de videos y cualquier otra carpeta o archivo
     # visible de su casa en Ubuntu, más su llave (.ia-nomads, sin el motor
@@ -246,9 +270,10 @@ if ($hayUbuntu) {
       Write-Host "· La copia va a: $Respaldo"
 
       # La casa de Ubuntu vista desde Windows.
-      $unc = "\\wsl.localhost\$hayUbuntu\home\$usuario"
+      $casaWin = ($home_.TrimStart('/') -replace '/', '\')
+      $unc = "\\wsl.localhost\$hayUbuntu\$casaWin"
       if (-not (Test-Path -LiteralPath $unc)) {
-        $viejo = "\\wsl$\$hayUbuntu\home\$usuario"
+        $viejo = "\\wsl$\$hayUbuntu\$casaWin"
         if (Test-Path -LiteralPath $viejo) { $unc = $viejo } else { Write-Host "· Windows no confirma la ruta $unc; se intenta la copia igual." }
       }
 
@@ -289,10 +314,10 @@ if ($hayUbuntu) {
         "videos:      la carpeta de trabajo con los videos y proyectos (sin node_modules, que son paquetes descargables).",
         ".ia-nomads:  la llave de acceso (config). El motor descargado no se copia porque se vuelve a bajar.",
         ".claude:     las sesiones y ajustes de Claude dentro de Ubuntu (sin la copia del skill).",
-        "Cualquier otra carpeta o archivo visible que hubiera en la casa de Ubuntu también está aquí."
+        "Cualquier otra carpeta o archivo visible que hubiera en la casa de Ubuntu también está aquí.",
+        "Los archivos ocultos de la casa fuera de .ia-nomads y .claude (por ejemplo .ssh, .gitconfig o .bashrc) NO se copiaron."
       ) | Out-File -FilePath (Join-Path $Respaldo 'LEEME.txt') -Encoding UTF8
     }
-  }
   } catch {
     $nota = ''
     if ($Respaldo) { $nota = " Lo copiado hasta ahora está en $Respaldo." }
@@ -319,19 +344,21 @@ if (-not (Ubuntu)) {
   } catch { Write-Host "· No pude quitar la app de Ubuntu de la tienda: $($_.Exception.Message)" }
 }
 
-# La carpeta a donde se movió Ubuntu (con su disco ext4.vhdx), solo si ya no
-# está registrada y no tiene nada más que ese disco.
-$registradas = @(CarpetasRegistradas)
-foreach ($c in CarpetasDistro) {
-  if ($registradas -contains $c.TrimEnd('\')) { Write-Host "· $c sigue registrada en WSL: no se toca."; continue }
-  $otros = @(Get-ChildItem -LiteralPath $c -Recurse -Force -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer -and $_.Extension -ne '.vhdx' })
-  if ($otros.Count -gt 0) { Write-Host "· $c tiene archivos que no son de Ubuntu ($($otros.Count)): no se borra, revísala a mano."; continue }
-  Remove-Item -LiteralPath $c -Recurse -Force
-  $Quitado += "la carpeta del disco de Ubuntu ($c)"
+# La carpeta de disco de Ubuntu (la que WSL tenía registrada; si se movió de
+# disco, la nueva). Al desregistrar WSL borra el ext4.vhdx pero puede dejar la
+# carpeta; se borra solo si ya no está registrada y no tiene nada más que ese
+# disco.
+if ($carpetaDistro -and (Test-Path -LiteralPath $carpetaDistro)) {
+  $c = $carpetaDistro
+  if (@(CarpetasRegistradas) -contains $c) { Write-Host "· $c sigue registrada en WSL: no se toca." }
+  else {
+    $otros = @(Get-ChildItem -LiteralPath $c -Recurse -Force -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer -and $_.Extension -ne '.vhdx' })
+    if ($otros.Count -gt 0) { Write-Host "· $c tiene archivos que no son de Ubuntu ($($otros.Count)): no se borra, revísala a mano." }
+    else { Remove-Item -LiteralPath $c -Recurse -Force; $Quitado += "la carpeta del disco de Ubuntu ($c)" }
+  }
 }
 
 foreach ($a in Atajos) { Remove-Item -LiteralPath $a -Force; $Quitado += "el acceso directo $a" }
-if (Test-Path -LiteralPath $SkillWindows) { Remove-Item -LiteralPath $SkillWindows -Recurse -Force; $Quitado += "la copia del skill en Windows ($SkillWindows)" }
 if (Test-Path -LiteralPath $InstaladorTemp) { Remove-Item -LiteralPath $InstaladorTemp -Force; $Quitado += 'el instalador descargado' }
 
 # ── 4. Quitar WSL (lo puso el instalador), salvo que se pida conservarlo ──
@@ -390,9 +417,8 @@ if ($ConservarWsl) {
 Paso 'Verificando que no quedó nada'
 $problemas = @()
 if (Ubuntu) { $problemas += 'Ubuntu sigue en WSL' }
-foreach ($c in CarpetasDistro) { $problemas += "sigue la carpeta $c" }
+if ($carpetaDistro -and (Test-Path -LiteralPath $carpetaDistro)) { $problemas += "sigue la carpeta del disco de Ubuntu $carpetaDistro" }
 foreach ($a in Atajos) { $problemas += "sigue el acceso directo $a" }
-if (Test-Path -LiteralPath $SkillWindows) { $problemas += "sigue la copia del skill en $SkillWindows" }
 if ($Respaldo -and -not (Test-Path -LiteralPath $Respaldo)) { $problemas += "la copia de $Respaldo ya no está" }
 if (-not $ConservarWsl -and $otras.Count -eq 0) {
   if ((Caracteristica 'VirtualMachinePlatform') -eq 1) { $problemas += 'la Plataforma de máquina virtual sigue activada' }
@@ -408,6 +434,7 @@ if ($Quitado.Count -gt 0) { $reporte += "Se quitó: $($Quitado -join '; ')." } e
 if ($ConservarWsl) { $reporte += 'WSL se dejó puesto, como se pidió.' }
 elseif ($otras.Count -gt 0) { $reporte += "WSL se dejó puesto porque tiene otros Linux: $($otras -join ', ')." }
 else { $reporte += 'WSL quedó quitado de Windows.' }
+if (Test-Path -LiteralPath $SkillWindows) { $reporte += "Queda una copia del skill en $SkillWindows; no era del instalador y se dejó." }
 if ($dondeRespaldo) { $reporte += "La copia de lo de la persona (videos, llave y sesiones) está en: $dondeRespaldo. No se borra; la persona decide qué hacer con ella." }
 else { $reporte += 'No hay ninguna copia de respaldo en este computador: no había nada de la persona que guardar.' }
 Fin 0 ($reporte -join ' ')
