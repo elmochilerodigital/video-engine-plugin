@@ -70,6 +70,8 @@ Se corre las veces que haga falta; su código de salida dice qué sigue:
 
 A la persona se le habla en palabras simples, nunca de comandos.
 
+Para quitar el motor de un Windows y dejarlo como estaba, sin perder nada de la persona: [windows/README-desinstalar.md](windows/README-desinstalar.md).
+
 ## Cómo funciona
 
 - El **motor** (privado) y la **marca** (Supabase) se jalan frescos con tu
