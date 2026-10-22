@@ -53,7 +53,8 @@ code=$(curl -sS -w "%{http_code}" -o "$TMP/engine.tar.gz" \
 
 if [ "$code" != "200" ]; then
   echo "✗ El gateway respondió $code"
-  head -c 300 "$TMP/engine.tar.gz" 2>/dev/null
+  head -c 300 "$TMP/engine.tar.gz" 2>/dev/null; echo
+  case "$code" in 401|403) [ -z "$ENGINE_SECRET" ] && [ "${ENGINE_AUTH_PROXY:-}" = 1 ] && nube_sesion_aviso_401 ;; esac
   exit 1
 fi
 

@@ -24,7 +24,7 @@ ENGINE_SECRET="${ENGINE_SECRET:-}"
 SALIDA="$(CLIENT="$CLIENT" CONFIG="$CONFIG" bash -c 'source "$1/_secret.sh" >/dev/null 2>&1 && printf "%s" "$ENGINE_SECRET"' _ "$DIR" 2>/dev/null)" || true
 ENGINE_SECRET="$SALIDA"
 if [ -n "$ENGINE_SECRET" ]; then VIA="llave de ~/.ia-nomads/config"
-elif nube_sesion; then VIA="llave por el proxy de la nube (secreto de red)"
+elif nube_sesion; then VIA="sin llave en disco, la pone el proxy de la nube (señal: $(nube_sesion_motivo))"
 else
   echo "✗ sin llave: no hay ~/.ia-nomads/config y esta no es una sesión en la nube (el skill la pide)"
   exit 1
@@ -38,6 +38,8 @@ DONDE="$(python3 -c "import json,sys;print(json.load(open(sys.argv[1])).get('mot
 case "$CODE" in
   200) echo "✓ gateway $HOST responde 200 desde esta sesión · $VIA${DONDE:+ · la cuenta pinta en: $DONDE}"; exit 0 ;;
   000) echo "✗ gateway $HOST no responde (sin red hacia él): en la nube, revisar que $HOST esté en los dominios permitidos del entorno y como host del secreto de red"; exit 1 ;;
-  401|403) echo "✗ gateway $HOST respondió $CODE: la llave no llegó o no vale · $VIA$( nube_sesion && [ -z "$ENGINE_SECRET" ] && echo " · revisar el secreto de red del entorno: host $HOST, cabecera Authorization con prefijo Bearer y la llave que entregó IA Nomads")"; exit 1 ;;
+  401|403) echo "✗ gateway $HOST respondió $CODE: la llave no llegó o no vale · $VIA"
+           [ -z "$ENGINE_SECRET" ] && nube_sesion_aviso_401
+           exit 1 ;;
   *) echo "✗ gateway $HOST respondió $CODE · $VIA · $(head -c 160 "$TMP" | tr '\n' ' ')"; exit 1 ;;
 esac

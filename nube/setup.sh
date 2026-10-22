@@ -18,8 +18,9 @@
 # Nomads, no aquí. Tampoco guarda ninguna llave: la llave de la cuenta es
 # un secreto de red del entorno y la sesión nunca la ve.
 #
-# Deja dos marcas (/etc/ia-nomads/nube y ~/.ia-nomads/nube) con las que el
-# plugin y el motor reconocen que corren en la nube, y clona este plugin
+# Deja la marca /etc/ia-nomads/nube (solo root la escribe, y solo vale esa:
+# una marca suelta en un HOME no activa el modo) con la que el plugin y el
+# motor reconocen que corren en la nube, y clona este plugin
 # como skill del usuario para que la sesión lo encuentre por su nombre.
 # Siempre termina con 0: un fallo parcial se imprime y la sesión arranca.
 set -u
@@ -63,8 +64,7 @@ fi
 # Las marcas de "esto es la nube": el motor y el plugin no piden llave ni
 # intentan preparar la máquina cuando las ven.
 mkdir -p /etc/ia-nomads "${HOME:-/root}/.ia-nomads" 2>/dev/null
-date -u +%Y-%m-%dT%H:%M:%SZ > /etc/ia-nomads/nube 2>/dev/null || true
-date -u +%Y-%m-%dT%H:%M:%SZ > "${HOME:-/root}/.ia-nomads/nube" 2>/dev/null || true
+date -u +%Y-%m-%dT%H:%M:%SZ > /etc/ia-nomads/nube 2>/dev/null || echo "⚠️  no se pudo escribir /etc/ia-nomads/nube (¿no corre como root?)"
 chmod -R a+rX /etc/ia-nomads 2>/dev/null || true
 
 echo ""
