@@ -41,6 +41,12 @@ En esa sesión **cambian tres cosas y nada más**:
   o la bandeja con `produccion.sh`): no hay archivos en este computador.
   El video se sube a la tarjeta desde la app o desde el conector. La
   transcripción sale de las palabras con tiempos que la tarjeta ya tiene.
+  El material de apoyo (fotos, video de fondo, canción, PDF) también vive
+  en la tarjeta: el motor lo baja solo. **No se pregunta por material**:
+  "edita este video" se edita con lo que tenga la tarjeta. Solo si la
+  persona dice que quiere agregar material se le explica cómo: a la
+  sección *Material de apoyo* de la tarjeta en el Planner o un link de
+  Drive pegado ahí; nunca arrastrando archivos a este chat, que no llegan.
 
 Los pasos de la sesión en la nube, en este orden y sin preguntar nada:
 
@@ -184,6 +190,14 @@ que imprime el script, en palabras simples, y se le ofrece producir sus
 videos con el flujo normal.
 
 ## Notas
+
+- **El material no se pregunta.** En cualquier máquina, "edita este
+  video" se edita con lo que tenga la tarjeta (el motor baja su material
+  de apoyo solo). Solo si la persona dice que quiere agregar material se
+  le explica cómo: *Material de apoyo* de la tarjeta en el Planner, un
+  link de Drive pegado ahí, o, si la sesión corre en su computador, una
+  carpeta junto al footage. Los archivos arrastrados al chat no llegan a
+  la tarjeta.
 
 - **Sesiones guardadas en el OS:** si una llave de la máquina es de una
   persona del equipo que entrena formatos, `pull-engine.sh` deja puesto un

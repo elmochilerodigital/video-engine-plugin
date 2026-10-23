@@ -101,10 +101,21 @@ llega a la misma tarjeta, en *Revisar*.
 Para saber qué hay listo para producir, basta con preguntarlo en la misma
 sesión: "qué videos hay aprobados para producir".
 
+**Si el video lleva material** (fotos del producto, un video de fondo, una
+canción, un PDF), se sube a la tarjeta ANTES de pedir la edición:
+arrástralo a la sección *Material de apoyo* de la tarjeta en el Planner, o
+pega ahí un link de Google Drive. Si no lleva material, no hay que hacer
+nada: Claude edita con lo grabado. No arrastres archivos al chat de
+Claude: no llegan a la tarjeta.
+
 ## 6 · Después: lo que conviene saber
 
 - **Cada sesión es un video.** Al terminar uno, abre otra sesión para el
   siguiente; la lista de la izquierda guarda las anteriores.
+- **El material va en la tarjeta, no en el chat.** Si a mitad de camino
+  quieres agregar una foto o una canción, súbela al *Material de apoyo* de
+  la tarjeta (o pega el link de Drive) y díselo a Claude. Un archivo
+  arrastrado al chat no llega a la tarjeta y no entra al video.
 - **Si la sesión estuvo quieta mucho rato**, la máquina de la nube se
   apaga y la conversación se conserva. Al volver a escribirle, Claude
   revisa si la carpeta del video sigue; si no, la rehace desde la nube de
